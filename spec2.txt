@@ -1,0 +1,297 @@
+Overview
+
+CLIo is a desktop personal memory assistant built with Avalonia (C#) and powered by an LLM (DeepSeek via BotSharp). It provides a unified interface for storing, retrieving, and reasoning over personal information — key‑value memory, calendar events, tasks, and temporal logs — using natural language and explicit system commands.
+🎯 Core Principles
+Principle	Description
+Memory is the product – CLIo's primary value is what it remembers and surfaces.	
+Natural language first – most interactions should feel like talking to a person.	
+Explicit when needed – __ commands provide precision and certainty.	
+Temporal awareness – memory is not just facts, but when they happened.	
+Generic by design – the system works for any user, not just its creator.	
+Privacy‑first – all data is encrypted locally; no cloud storage of raw data.	
+Extensible – new key categories and command types can be added without rewriting core logic.	
+Self‑aware – CLIo can explain its own architecture, memory system, and commands on request.	
+🧱 Tech Stack
+Component	Technology	Notes
+UI	Avalonia (C#, MVVM)	Cross‑platform desktop, targets Windows first
+Framework	BotSharp	.NET agent orchestration, routing, state management
+LLM	DeepSeek (via BotSharp plugin)	Low‑cost, high‑quality reasoning
+Database	SQLite + SQLCipher	Encrypted at‑rest storage
+Encryption	Windows DPAPI + SQLCipher	Secrets and full DB encryption
+NLP / Intent	BotSharp (primary) + Catalyst (fallback)	Local intent/entity extraction when LLM is unavailable
+Date parsing	Microsoft.Recognizers.Text	Natural language date/time parsing
+Display	Humanizer	Human‑friendly date/time formatting
+Speech	Whisper.cpp (STT), Edge TTS (TTS)	Offline voice input/output
+🗄️ Memory Architecture
+1. Key‑Value Store (50‑Key System)
+
+The core of CLIo is a flat key‑value store using colon‑delimited hierarchical keys.
+
+Key format: category:subcategory:item:field
+
+Static main categories (50 total, with dynamic subkeys):
+Category	Fixed Count	Dynamic Subkeys	Purpose
+user:	6	No	Identity, traits, philosophy, interests, communication style
+projects:	6	Yes (per project)	Active projects, status, tech stack, blockers
+people:	4	Yes (per person)	Relationships, contact info, context
+systems:	4	Yes	Hardware, services, domains, backups
+tools:	4	No	Development environment, preferences
+goals:	5	Yes	Short/long‑term goals, decisions
+knowledge:	4	Yes	Learnings, skills, resources, mistakes
+context:	4	Yes	Life status, health, environment, energy
+meta:	4	No	System state, version, last compact, learned patterns
+flex:	9	Yes	Reserved for future/uncategorized
+
+Dynamic subkey examples:
+
+    people:sarah:phone
+
+    projects:sendpop:status
+
+    locations:doctor:address
+
+Key operations: store, retrieve, update, delete, list, search, merge, rename, export, import.
+
+Memory compaction: When total keys approach 50, CLIo suggests archiving or merging old/unused keys.
+2. Temporal Event Store (Calendar, Appointments, Reminders)
+
+Separate SQLite table for time‑based data.
+
+Schema:
+sql
+
+CREATE TABLE temporal_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type TEXT,                -- 'appointment', 'reminder', 'deadline', 'recurring'
+    title TEXT,
+    description TEXT,
+    start_time DATETIME,
+    end_time DATETIME,
+    all_day BOOLEAN DEFAULT 0,
+    location TEXT,
+    recurrence_rule TEXT,           -- RFC 5545 format
+    recurrence_end DATETIME,
+    tags TEXT,
+    status TEXT DEFAULT 'scheduled',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
+    reminder_minutes INTEGER,
+    source TEXT
+);
+
+CREATE TABLE temporal_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER,
+    action TEXT,                    -- 'created', 'updated', 'moved', 'completed'
+    old_value TEXT,                 -- JSON diff
+    new_value TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES temporal_events(id)
+);
+
+Natural language creation: "Remind me to call Sansui on Monday" → inserts into temporal_events with type 'reminder'.
+
+Recurring events: Use recurrence_rule for patterns like "every Tuesday at 10am".
+
+Proactive notifications: CLIo checks upcoming events and sends reminders.
+3. Task / Todo System
+
+Separate table for structured tasks.
+
+Schema:
+sql
+
+CREATE TABLE tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    description TEXT,
+    due_date DATETIME,
+    priority TEXT DEFAULT 'medium',  -- 'high', 'medium', 'low'
+    completed BOOLEAN DEFAULT 0,
+    project TEXT,
+    tags TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME
+);
+
+Integration: Tasks can reference projects via the project field (e.g., 'sendpop').
+🔐 Encryption & Security
+Layer	Method
+Full database	SQLCipher (AES‑256) with a user‑provided or system‑derived key
+Secrets (passwords, TOTP)	DPAPI (Windows) per‑field encryption on top of SQLCipher
+Key management	Master key derived from user passphrase (optional) or DPAPI (Windows)
+In‑transit	No cloud sync by default; future sync would use end‑to‑end encryption
+🧠 Natural Language & Intent Processing
+Primary: BotSharp + DeepSeek
+
+CLIo uses BotSharp as the orchestration framework and DeepSeek as the LLM backend.
+
+    BotSharp Router routes messages to appropriate agents (MemoryAgent, CalendarAgent, TaskAgent).
+
+    Agents contain system prompts describing their domain and execute the actual logic.
+
+    DeepSeek handles:
+
+        Intent classification (store, retrieve, update, delete, task, event, question, command)
+
+        Entity extraction (people, dates, projects, values)
+
+        Natural language response generation
+
+        Natural language command parsing (for __)
+
+Fallback: Local NLP Libraries
+
+When the LLM is unavailable or for simple patterns:
+
+    Catalyst – intent classification, named entity recognition (offline, pure .NET)
+
+    Microsoft.Recognizers.Text – date/time parsing ("next Tuesday", "two weeks from now")
+
+    Humanizer – human‑friendly date display
+
+Command Modes
+
+Natural language (no prefix):
+
+    CLIo interprets intent from context.
+
+    Examples: "Remember Sarah's phone is 555‑1234", "What's my doctor's address?"
+
+Explicit command (prefix __):
+
+    Signals a direct directive, not a conversation.
+
+    Still parsed naturally, but processed with higher certainty.
+
+    Examples: __move my apt on friday to wednesday next week, __show people, __merge people:john people:john_doe
+
+🖥️ UI / UX (Avalonia)
+
+Main Window:
+
+    Left panel: conversation history (timestamped)
+
+    Right panel: memory browser (key‑value tree view, searchable)
+
+    Bottom: input field (supports natural language and __ commands)
+
+Smart Mirror Mode:
+
+    Full‑screen, always‑on‑top
+
+    Shows: time, date, upcoming events, random memory, current project status
+
+Speech Integration:
+
+    Hotkey (e.g., Ctrl+Shift+Space) starts speech‑to‑text recording (Whisper.cpp)
+
+    Text‑to‑speech for assistant responses (Edge TTS)
+
+🔌 Integration with Other Projects
+Project	Integration Point
+SendPop	CLIo stores email credentials, shows unread counts, drafts replies
+SCEAM	CLIo stores VPS connections, deployment history, IPs
+docklite	CLIo tracks service status, logs, config paths
+Cleanse11	CLIo tracks ISO builds, component removal decisions
+🧵 System Prompt for CLIo's LLM
+
+A comprehensive system prompt that defines the agent's role, memory schema, command structure, and fallback behavior. Includes:
+
+    50‑key system explanation
+
+    Temporal event and task schemas
+
+    Natural language parsing rules
+
+    __ command interpretation
+
+    Memory compaction guidelines
+
+    Self‑awareness: CLIo has a built‑in description of its own architecture, which it can surface when asked "how does CLIo work?" or when the user invokes __help.
+
+The system prompt is maintained separately as a living document. It includes a section titled "About CLIo" that describes its purpose, capabilities, and how to use it. This ensures the LLM can always respond accurately to user questions about the system itself.
+🚀 Development Roadmap
+Phase 1: Core Memory System (Week 1–2)
+
+    Set up SQLite + SQLCipher
+
+    Implement 50‑key CRUD operations (store, retrieve, update, delete, list)
+
+    Create temporal_events and tasks tables
+
+    Basic natural language storage/retrieval via BotSharp + DeepSeek
+
+Phase 2: __ Command System (Week 3)
+
+    Implement __ command parsing (move, merge, show, forget, rename, search, export, import, wipe)
+
+    Add structured JSON output for LLM command responses
+
+    Test with sample commands
+
+Phase 3: UI Integration (Week 4)
+
+    Avalonia main window (chat + memory browser)
+
+    Smart mirror mode
+
+    Speech‑to‑text hotkey
+
+    Text‑to‑speech
+
+Phase 4: Advanced Features (Week 5–6)
+
+    Recurring events and reminders
+
+    Memory compaction and learning patterns
+
+    Integration with SendPop, SCEAM, docklite
+
+    Proactive notifications and weekly summaries
+
+Phase 5: Polish & Release (Week 7)
+
+    Performance optimization
+
+    User documentation
+
+    MSI installer (WiX)
+
+    Beta release
+
+📦 Deliverables
+
+    Avalonia desktop application with chat interface, memory browser, and smart mirror mode.
+
+    SQLite database with SQLCipher encryption (full schema).
+
+    BotSharp + DeepSeek integration with MemoryAgent, CalendarAgent, TaskAgent.
+
+    __ command system with natural language parsing.
+
+    Speech‑to‑text (Whisper.cpp) and text‑to‑speech (Edge TTS) integration.
+
+    Full system prompt for the LLM (maintained separately, includes self‑description).
+
+    MSI installer (WiX) for Windows distribution.
+
+    Comprehensive documentation for end users and developers.
+
+📌 Notes for Claude Code
+
+    This is a Windows desktop application built with Avalonia and C#.
+
+    The primary LLM provider is DeepSeek via BotSharp plugin.
+
+    The memory system is generic – it should work for any user, not just the creator.
+
+    Encryption is mandatory for all stored data.
+
+    The __ command system is the primary interface for explicit operations.
+
+    The system must be extensible – new key categories and command types can be added over time.
+
+    All user data stays local – no cloud dependency.
+
+    Self‑awareness – the LLM system prompt includes a full description of CLIo itself, so it can answer questions about its own capabilities, architecture, and usage.

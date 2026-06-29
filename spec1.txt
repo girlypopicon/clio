@@ -1,0 +1,393 @@
+CLIo - Chat Runtime MVP Spec
+
+Goal
+
+Build a local-first conversational runtime that replaces the "main chat" use case from ChatGPT/DeepSeek.
+
+The user should be able to casually talk to CLIo throughout the day. CLIo should preserve the conversation history, detect useful structure, and help organize that stream into memory, calendar items, tasks, summaries, and temporal patterns.
+
+The goal is not a coding assistant.
+
+The goal is:
+
+"I can bullshit with CLIo naturally, and it quietly helps me remember, organize, and understand my life over time."
+
+Core Product Shape
+
+1. Main Chat Hub
+
+- Main Chat is the default place the user talks to CLIo.
+- Side chats can be created for specific topics.
+- Main Chat can use summaries and recent tails from side chats.
+- Side chats stay focused unless the user brings outside context in.
+- Chat should feel lightweight, fast, and comfortable enough for messy thoughts.
+
+2. Local-First Runtime
+
+- Store all data locally in SQLite.
+- No cloud database.
+- No auth system for MVP.
+- LLM calls go to the configured provider only when the user sends or explicitly runs an action.
+- No local data should leave the app except the prompt/context intentionally sent to the LLM provider.
+
+3. DeepSeek First
+
+- DeepSeek is the first provider.
+- API key is configured in Settings.
+- Provider layer should stay swappable later.
+- Missing API key should be explained inside the app, not through developer setup.
+
+4. Chat Types
+
+- Main Chat: personal hub with global memory, cross-chat context, temporal awareness, and access to summaries from other chats.
+- Scope Chats: isolated topic chats. Better product names to consider: Threads, Channels, Sessions, Rooms.
+- Scope Chats know their own history and that they belong to the user.
+- Scope Chats do not read other Scope Chats.
+- Scope Chats do not read Main Chat unless the user explicitly brings context in.
+- Scope Chats may suggest memory updates, but Main Chat or Memory Review should confirm global writes.
+
+5. Temporal Layer
+
+- Every message is timestamped locally at send time.
+- Assistant uses current local time for recency, deadlines, schedule pressure, and temporal reasoning.
+- Raw timestamps should never be printed into user-visible responses.
+
+Next Push Features
+
+- Chat renaming.
+- Thread hierarchy: organize scope chats under categories like dev, logistics, creative, relationships, moving, etc.
+- Cross-chat summons from Main Chat: ask about something from another chat and pull relevant context selectively.
+- Temporal triggers: reminders and future surfacing, e.g. "remind me at 3pm" or "on June 1, surface the moving checklist".
+- Memory review: periodic "here is what I think I know; confirm or correct" flow.
+
+Open Questions
+
+- Should Scope Chats ever write to global memory directly, or only suggest?
+- Should Scope Chats get read-only access to safe global facts like name and timezone?
+- How should users distinguish Scope Chats at a glance: color, icon, prefix, category?
+- What is the lifecycle for Scope Chats: archive, soft delete, hard delete?
+
+Memory Types
+
+The runtime should support different kinds of memory, not just flat key-value strings. Each type has its own rules for storage, retrieval, and confirmation.
+
+1. Facts
+
+Confirmed, stable information.
+
+Examples:
+- User name
+- Preferred interaction style
+- Current project focus
+- Durable goals
+- Confirmed constraints
+
+Rules:
+- Stored permanently unless explicitly changed.
+- Retrieved on every interaction.
+- Must be explicitly stated or confirmed.
+- If the user contradicts a stored Fact, update it immediately.
+
+2. Context
+
+Session-level, ephemeral state.
+
+Examples:
+- Current topic
+- Current mood indication
+- What the user is actively thinking through
+- Recent messages
+
+Rules:
+- Stored in a short-term buffer.
+- Not persisted as long-term memory by default.
+- Cleared when the session ends, topic shifts, or the context becomes stale.
+- Used heavily for the active response.
+
+3. Patterns
+
+Inferred observations across conversations.
+
+Examples:
+- "You tend to brainstorm late at night."
+- "You prefer direct answers over therapeutic framing."
+- "This project keeps coming up when you talk about motivation."
+
+Rules:
+- Must be confirmed before storage.
+- CLIo should explain why it thinks the pattern exists.
+- Store confirmed Patterns as Facts or as a dedicated Pattern record.
+- Never silently persist inferred Patterns.
+
+4. Entries
+
+Full conversation history.
+
+Examples:
+- Every user and assistant message.
+- Chat thread transcripts.
+- Journal-like conversation content.
+
+Rules:
+- Append-only after storage.
+- Searchable by date, keyword, chat, and tag.
+- Soft-delete by default.
+- Hard-delete requires explicit confirmation and a clear warning.
+- Entries are not all loaded into the prompt. The UI can show all of them, but the LLM receives only selected/relevant context.
+
+5. Tags / Metadata
+
+User-generated or runtime-suggested structure.
+
+Examples:
+- #project-idea
+- #brain-dump
+- #decision
+- #relationship
+- #deadline
+
+Rules:
+- Optional.
+- Can attach to Entries, Facts, Patterns, Tasks, or Calendar items.
+- Runtime may suggest tags, but user confirmation is required before persistent tagging if the tag has semantic weight.
+
+6. Preferences
+
+Instructions about how CLIo should behave.
+
+Examples:
+- "Be concise on weekdays."
+- "Ask me follow-up questions."
+- "Do not interrupt my train of thought."
+- "Use bullet points when I am planning."
+
+Rules:
+- Preferences override default identity instructions.
+- Retrieved on every interaction.
+- Must be explicitly stated or confirmed.
+- If a preference conflicts with another preference, ask the user to clarify.
+
+Retrieval Rules
+
+- Always load Facts and Preferences at the start of a session.
+- Always load active Context for the current chat/session.
+- Load recent messages for conversational continuity.
+- Load Entries only when the user asks for something specific or relevance is detected.
+- Load side-chat summaries into Main Chat, not full side-chat transcripts by default.
+- Never flood the LLM with all stored data.
+- UI history and LLM context are separate: the UI may show all messages, while the prompt should stay bounded.
+
+Confirmation Rules
+
+- Before storing a new Fact, ask the user once and store if confirmed.
+- Before storing a Pattern, explain the evidence and ask for confirmation.
+- If the user contradicts a stored Fact, update it immediately without requiring a second confirmation.
+- If the user seems uncertain, do not store anything.
+- If CLIo is unsure whether something should be stored, default to not storing.
+- If there is a conflict between stored Facts, ask the user to clarify.
+
+Privacy / Safety Rules
+
+- Never treat sensitive personal data as a Fact unless explicitly stated and confirmed.
+- Sensitive areas include health, finances, relationships, legal issues, identity, and private third-party information.
+- No data leaves the local database except what is intentionally sent to the configured LLM provider.
+- Hard-delete requires explicit confirmation with a clear warning.
+- If the LLM appears to hallucinate memory, the runtime should flag it and not store anything from that response.
+
+Organizer Behavior
+
+CLIo should be able to turn messy conversation into structured candidates.
+
+Candidate types:
+- Memory candidates
+- Preference candidates
+- Pattern candidates
+- Task candidates
+- Calendar/schedule candidates
+- Tags
+- Follow-up questions
+
+MVP rule:
+- Do not auto-save candidates yet.
+- Show candidates for review.
+- User approves what gets persisted.
+
+Future rule:
+- Low-risk explicit facts can be stored after lightweight confirmation.
+- Sensitive or inferred facts still require explicit confirmation.
+
+Chat UX Requirements
+
+1. Full History
+
+- The selected chat should show the whole conversation history.
+- The user must be able to scroll up and read older messages.
+- Loading full UI history must not mean sending full history to the LLM.
+
+2. Latest Message Behavior
+
+- On thread load, scroll to the newest message.
+- When the user sends a message, keep the view anchored near the bottom.
+- While the assistant streams, the latest output should remain visible if the user is already at the bottom.
+- If the user has intentionally scrolled up, do not fight them; show a subtle "Jump to latest" affordance instead.
+
+3. Text Selection and Copy
+
+Current problem to solve:
+- Selecting text across more than one screen does not auto-scroll reliably.
+- Built-in right-click copy is inconsistent.
+- Manual selection can conflict with auto-scroll.
+
+Requirements:
+- The user must be able to select and copy arbitrary text from messages.
+- Drag-selecting text beyond the visible viewport should auto-scroll the chat pane.
+- Ctrl+C should copy selected text when text is selected.
+- If no text is selected but a message is selected, Ctrl+C should copy the full message.
+- Each message should have a compact overflow menu, not a visible copy button.
+- The first overflow menu item should be Copy.
+- Copy should use the OS clipboard directly and reliably.
+- Auto-scroll must pause while the user is selecting text.
+- Auto-scroll may resume after selection ends or after the user jumps to latest.
+
+4. Message Display
+
+- Message cards should be clean and minimal.
+- Do not show timestamps in the normal message UI.
+- Timestamps remain stored in the backend for recency, search, and temporal reasoning.
+- Role labels can remain visible unless the UI becomes too noisy.
+
+5. Composer
+
+- Enter sends.
+- Ctrl+Enter inserts a line break.
+- The composer should support normal copy/paste/editing.
+- Sending should clear the composer immediately.
+
+Settings Requirements
+
+- Settings opens as a modal overlay.
+- First setting: DeepSeek API key.
+- API key is stored locally.
+- API key loads at app startup.
+- Later settings can include model, provider, temperature, verbosity, and privacy toggles.
+
+Data Model Sketch
+
+Tables:
+- chat_threads
+- chat_messages
+- memory_facts
+- memory_preferences
+- memory_patterns
+- memory_candidates
+- calendar_events
+- tasks
+- tags
+- entry_tags
+- settings
+
+Current MVP can keep some of these collapsed into simpler tables, but the runtime should move toward typed memory instead of one flat key/value list.
+
+Implementation Priorities
+
+1. Reliable chat basics
+- Full history display
+- Bottom anchoring
+- Copy/select that actually works
+- Enter to send
+- Settings for API key
+
+2. Reviewable organization
+- Capture pass produces candidates.
+- Candidates are shown in a review UI.
+- User approves save to memory, calendar, tasks, or tags.
+
+3. Typed memory
+- Split Facts, Preferences, Patterns, Entries, Tags.
+- Add retrieval logic per type.
+- Add confirmation logic per type.
+
+4. Search and recall
+- Search entries by keyword/date/tag.
+- Ask CLIo about previous conversations.
+- Retrieve relevant entries selectively.
+
+Product Philosophy
+
+CLIo should feel:
+- calm
+- local
+- private
+- fast
+- conversational
+- organized without being fussy
+
+CLIo should not feel:
+- corporate
+- over-automated
+- cluttered
+- like an IDE
+- like a productivity app that creates work
+
+Best positioning:
+
+"A local-first main chat that turns messy conversation into memory, context, and temporal organization."
+
+UI/UX & Branding Spec
+
+Layout: Four-View System
+
+Structure:
+- Left sidebar: hidable, adaptive per view.
+- Top bar: three centered buttons for Chat, Calendar, Memory; one right-aligned Settings button.
+- Main area: fills remaining space.
+
+Views:
+- Chat: sidebar shows chat list, with Main Chat distinguished and scoped threads below. Main area shows conversation and text input.
+- Calendar: sidebar shows month navigation and optional filter chips for tags and entry types. Main area shows a full calendar view with entries by date.
+- Memory: sidebar shows categories, including Facts, Patterns, and Preferences, with collapsible groups. Main area provides browse, search, and query tools.
+- Settings: no sidebar; settings open as a modal overlay with preferences, storage, and persona config.
+
+Sidebar behavior by view:
+- Chat: visible by default unless hidden by user toggle.
+- Calendar: adaptive; shows month nav/filters if useful, otherwise collapses.
+- Memory: adaptive; shows memory categories if useful, otherwise collapses.
+- Settings: hidden because modal overrides the workspace.
+
+Color Palette
+
+Base:
+- Background: #1A1A24, deep charcoal with indigo.
+- Surface: #24243A, slightly lighter same hue for sidebars and cards.
+- Text primary: #E8E6F0, soft white with violet undertone.
+- Text secondary: #9794B0, muted lavender-gray.
+
+Accents:
+- Primary action: #7C6FF0, violet for send button, active tabs, and links.
+- Secondary accent: #5CBBF0, sky blue for hover states, tags, and highlights.
+- Urgent / important highlights: #F0A05C, warm amber for attention without alarm.
+
+Alerts / status:
+- Success / confirmed: #6FCF97, muted green.
+- Error / warning: #E86F6F, soft red.
+
+Color intent:
+- Violet primary should feel distinctive without being loud.
+- Dark background reduces glare and visual noise.
+- Warm amber provides contrast without red-alert anxiety.
+- Dark mode only for MVP. CLIo is a think-space, not a corporate dashboard.
+
+Logo / Icon
+
+Primary concept:
+- A lowercase "c" with a curved tail that doubles as a thought bubble or spiral.
+- The mark should suggest conversation, reflection, and a loop returning to itself.
+
+Alternate concept:
+- A crescent moon using the "C" curve, with a small dot at the top right.
+- This emphasizes night-time reflection and quiet thinking.
+
+App icon variant:
+- Square background: #1A1A24.
+- Mark color: #7C6FF0.
+- Keep it simple enough to be recognizable at small sizes.

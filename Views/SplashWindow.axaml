@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="260"
+        x:Class="CLIo.Views.SplashWindow"
+        Width="420" Height="260"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        SystemDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        Icon="/Assets/clio.ico"
+        FontFamily="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"
+        Title="CLIo">
+
+    <Border Background="#1A1210" BorderBrush="#FF8C42" BorderThickness="1" CornerRadius="16">
+        <Grid RowDefinitions="*,3">
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="14">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="C" FontSize="42" FontWeight="Bold" Foreground="#CC6B4A"/>
+                    <TextBlock Text="L" FontSize="42" FontWeight="Bold" Foreground="#D4944A"/>
+                    <TextBlock Text="I" FontSize="42" FontWeight="Bold" Foreground="#C4A84D"/>
+                    <TextBlock Text="o" FontSize="42" FontWeight="Bold" Foreground="#6B9B6B"/>
+                    <TextBlock Text="_" FontSize="42" FontWeight="Bold" Foreground="#5B7EA3"/>
+                </StackPanel>
+                <TextBlock Text="warming up..." FontSize="13" Foreground="#8C7568"
+                           LetterSpacing="2" HorizontalAlignment="Center"/>
+            </StackPanel>
+            <Border Grid.Row="1" CornerRadius="0,0,16,16">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                        <GradientStop Color="#CC6B4A" Offset="0"/>
+                        <GradientStop Color="#D4944A" Offset="0.2"/>
+                        <GradientStop Color="#C4A84D" Offset="0.4"/>
+                        <GradientStop Color="#6B9B6B" Offset="0.6"/>
+                        <GradientStop Color="#5B7EA3" Offset="0.8"/>
+                        <GradientStop Color="#8B6B9B" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+        </Grid>
+    </Border>
+
+</Window>

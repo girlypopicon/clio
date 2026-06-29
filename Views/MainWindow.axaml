@@ -1,0 +1,989 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:CLIo.ViewModels"
+        xmlns:models="using:CLIo.Models"
+        xmlns:converters="using:CLIo.Converters"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1320" d:DesignHeight="840"
+        Width="1320" Height="840"
+        MinWidth="1040" MinHeight="680"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        x:Class="CLIo.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/clio.ico"
+        FontFamily="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"
+        Background="#1A1210"
+        Title="CLIo"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="48">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Window.Styles>
+        <Style Selector="Border.panel">
+            <Setter Property="Background" Value="#231A15"/>
+            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+        <Style Selector="Border.message">
+            <Setter Property="Background" Value="#2A1F19"/>
+            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="13"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.message:pointerover">
+            <Setter Property="BorderBrush" Value="#FF8C42"/>
+            <Setter Property="BoxShadow" Value="0 0 4 0 #66FF8C42, 0 0 14 0 #33FF8C42, 0 0 28 0 #15FF8C42"/>
+        </Style>
+        <Style Selector="Border.rail">
+            <Setter Property="Background" Value="#231A15"/>
+            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+        <Style Selector="Border.modal">
+            <Setter Property="Background" Value="#1A1210"/>
+            <Setter Property="BorderBrush" Value="#FF8C42"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="22"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#E8D5C4"/>
+        </Style>
+        <Style Selector="TextBlock.eyebrow">
+            <Setter Property="Foreground" Value="#FF8C42"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="LetterSpacing" Value="2"/>
+        </Style>
+        <Style Selector="TextBlock.title">
+            <Setter Property="Foreground" Value="#FFA654"/>
+            <Setter Property="FontSize" Value="19"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="Foreground" Value="#FFA654"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style Selector="TextBlock.muted">
+            <Setter Property="Foreground" Value="#8C7568"/>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#1A1210"/>
+            <Setter Property="Foreground" Value="#FFB347"/>
+            <Setter Property="CaretBrush" Value="#FFB347"/>
+            <Setter Property="SelectionBrush" Value="#3D2E24"/>
+            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="FontFamily" Value="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"/>
+        </Style>
+        <Style Selector="TextBox.messageText">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Foreground" Value="#E8D5C4"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#1A1210"/>
+            <Setter Property="Foreground" Value="#FFB347"/>
+            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,9"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="FontFamily" Value="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"/>
+        </Style>
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A1F19"/>
+            <Setter Property="TextBlock.Foreground" Value="#FF8C42"/>
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#FF8C42"/>
+            <Setter Property="Foreground" Value="#1A1210"/>
+            <Setter Property="BorderBrush" Value="#FF8C42"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#FFB347"/>
+            <Setter Property="TextBlock.Foreground" Value="#1A1210"/>
+        </Style>
+        <Style Selector="Button.ghost">
+            <Setter Property="Background" Value="#1A1210"/>
+            <Setter Property="BorderBrush" Value="#3D2E24"/>
+        </Style>
+        <Style Selector="Button.icon">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinWidth" Value="32"/>
+        </Style>
+        <Style Selector="Button.nav">
+            <Setter Property="Padding" Value="20,11"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="Button.nav.primary">
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="Button.dots">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#8C7568"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinWidth" Value="28"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.dots:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A1F19"/>
+            <Setter Property="TextBlock.Foreground" Value="#FF8C42"/>
+        </Style>
+        <Style Selector="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="ListBox.chatList ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="MinHeight" Value="34"/>
+        </Style>
+        <Style Selector="ListBox.chatList ListBoxItem /template/ ContentPresenter">
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.12"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2A1F19"/>
+        </Style>
+        <Style Selector="ListBox.chatList ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#FF8C42"/>
+            <Setter Property="BoxShadow" Value="0 0 4 0 #66FF8C42, 0 0 14 0 #33FF8C42, 0 0 28 0 #15FF8C42"/>
+        </Style>
+        <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.taskDone TextBlock">
+            <Setter Property="Opacity" Value="0.4"/>
+            <Setter Property="TextDecorations" Value="Strikethrough"/>
+        </Style>
+
+        <!-- Calendar: warm light card motif -->
+        <Style Selector="Border.calendarCard">
+            <Setter Property="Background" Value="#F5F0EB"/>
+            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="Padding" Value="20"/>
+        </Style>
+        <Style Selector="Border.calendarCard TextBlock">
+            <Setter Property="Foreground" Value="#2B2B33"/>
+        </Style>
+        <Style Selector="TextBlock.calendarTitle">
+            <Setter Property="Foreground" Value="#1F1F27"/>
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style Selector="TextBlock.calendarSubtitle">
+            <Setter Property="Foreground" Value="#9999A6"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="Button.calendarNav">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#3A3A45"/>
+            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="Button.calendarNav:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#EBEBF0"/>
+            <Setter Property="TextBlock.Foreground" Value="#1F1F27"/>
+        </Style>
+        <Style Selector="Button.calendarToggle">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#6F6F7C"/>
+            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.calendarToggle:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#EBEBF0"/>
+        </Style>
+        <Style Selector="Button.calendarToggle.active">
+            <Setter Property="Background" Value="#3D2E24"/>
+            <Setter Property="Foreground" Value="#FFB347"/>
+            <Setter Property="BorderBrush" Value="#3D2E24"/>
+        </Style>
+        <Style Selector="Button.calendarToggle.active:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#3D2E24"/>
+            <Setter Property="TextBlock.Foreground" Value="#FFB347"/>
+        </Style>
+        <Style Selector="TextBlock.calendarWeekday">
+            <Setter Property="Foreground" Value="#ABABB6"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        <Style Selector="Button.calendarCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="3"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="Button.calendarCell:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.calendarCell">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#ECECF1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="MinHeight" Value="120"/>
+        </Style>
+        <Style Selector="Border.calendarCell.otherMonth">
+            <Setter Property="Opacity" Value="0.45"/>
+        </Style>
+        <Style Selector="Border.calendarCell.today">
+            <Setter Property="BorderBrush" Value="#FF8C42"/>
+            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="Border.calendarCell.selected">
+            <Setter Property="Background" Value="#FFF5EC"/>
+        </Style>
+        <Style Selector="Border.calendarCell.compact">
+            <Setter Property="MinHeight" Value="92"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+        <Style Selector="Border.calendarCell.compact TextBlock.calendarDayNumber">
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="Border.calendarCell.compact Border.calendarEventChip">
+            <Setter Property="Padding" Value="5,2"/>
+            <Setter Property="Margin" Value="0,3,0,0"/>
+        </Style>
+        <Style Selector="Border.calendarCell.compact Border.calendarEventChip TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style Selector="Border.calendarCell.compact TextBlock.calendarOverflow">
+            <Setter Property="FontSize" Value="10"/>
+        </Style>
+        <Style Selector="TextBlock.calendarDayNumber">
+            <Setter Property="Foreground" Value="#2B2B33"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+        <Style Selector="Border.calendarEventChip">
+            <Setter Property="Background" Value="#FFF0E0"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="7,3"/>
+            <Setter Property="Margin" Value="0,3,0,0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="Border.calendarEventChip TextBlock">
+            <Setter Property="Foreground" Value="#CC6B2A"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+        <Style Selector="TextBlock.calendarOverflow">
+            <Setter Property="Foreground" Value="#ABABB6"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Margin" Value="2,3,0,0"/>
+        </Style>
+        <Style Selector="Border.calendarCard Border.message">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#ECECF1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+        <Style Selector="Border.calendarCard TextBox">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#2B2B33"/>
+            <Setter Property="CaretBrush" Value="#2B2B33"/>
+            <Setter Property="SelectionBrush" Value="#FFE4CC"/>
+            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="10"/>
+        </Style>
+        <Style Selector="Border.calendarCard DatePicker, Border.calendarCard TimePicker">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#2B2B33"/>
+            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+        <Style Selector="Border.calendarCard Button.primary">
+            <Setter Property="Background" Value="#3D2E24"/>
+            <Setter Property="Foreground" Value="#FFB347"/>
+            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+        <Style Selector="Border.calendarCard Button.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#4D3E34"/>
+            <Setter Property="TextBlock.Foreground" Value="#FFB347"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid Background="#1A1210">
+        <!-- Main layout: Title bar + rainbow stripe + content -->
+        <Grid RowDefinitions="Auto,Auto,*">
+
+            <!-- ═══ TITLE BAR (acts as window drag area) ═══ -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto" Height="48" Margin="8,0,8,0"
+                  IsHitTestVisible="True" Background="Transparent">
+                <!-- LEFT: Hamburger menu -->
+                <Button Grid.Column="0" Content="☰" Classes="icon" FontSize="16" Foreground="#FF8C42"
+                        VerticalAlignment="Center" Width="28" Height="28" Padding="0"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuItem Header="Chat" Command="{Binding ShowChatCommand}"/>
+                            <MenuItem Header="New focused chat" Command="{Binding CreateChatThreadCommand}"/>
+                            <MenuItem Header="Memory" Command="{Binding ShowMemoryCommand}"/>
+                            <MenuItem Header="Calendar" Command="{Binding ShowCalendarCommand}"/>
+                            <MenuItem Header="Tasks" Command="{Binding ShowTasksCommand}"/>
+                            <MenuItem Header="-"/>
+                            <MenuItem Header="Settings" Command="{Binding OpenSettingsCommand}"/>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+
+                <!-- Sidebar toggle (next to hamburger) -->
+                <Button Grid.Column="1" Content="◧" Classes="icon" FontSize="14" Foreground="#8C7568"
+                        VerticalAlignment="Center" Width="28" Height="28" Padding="0" Margin="2,0,0,0"
+                        HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Command="{Binding ToggleThreadsPanelCommand}"
+                        ToolTip.Tip="Toggle sidebar"/>
+
+                <!-- CENTER: Rainbow CLIo logo -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="0">
+                    <TextBlock Text="C" Foreground="#CC6B4A" FontSize="17" FontWeight="Bold"/>
+                    <TextBlock Text="L" Foreground="#D4944A" FontSize="17" FontWeight="Bold"/>
+                    <TextBlock Text="I" Foreground="#C4A84D" FontSize="17" FontWeight="Bold"/>
+                    <TextBlock Text="o" Foreground="#6B9B6B" FontSize="17" FontWeight="Bold"/>
+                </StackPanel>
+
+                <!-- RIGHT: Window controls -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Content="—" Classes="icon" FontSize="12" Foreground="#8C7568" Width="28" Height="28" Padding="0"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                            Click="MinimizeButton_OnClick" ToolTip.Tip="Minimize"/>
+                    <Button Content="□" Classes="icon" FontSize="13" Foreground="#8C7568" Width="28" Height="28" Padding="0"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                            Click="MaximizeButton_OnClick" ToolTip.Tip="Maximize"/>
+                    <Button Content="×" Classes="icon" FontSize="15" Foreground="#8C7568" Width="28" Height="28" Padding="0"
+                            HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                            Click="CloseButton_OnClick" ToolTip.Tip="Close"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ═══ RAINBOW STRIPE ═══ -->
+            <Border Grid.Row="1" Height="3" Margin="0,6,0,0">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
+                        <GradientStop Color="#CC6B4A" Offset="0"/>
+                        <GradientStop Color="#D4944A" Offset="0.2"/>
+                        <GradientStop Color="#C4A84D" Offset="0.4"/>
+                        <GradientStop Color="#6B9B6B" Offset="0.6"/>
+                        <GradientStop Color="#5B7EA3" Offset="0.8"/>
+                        <GradientStop Color="#8B6B9B" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- ═══ MAIN CONTENT AREA ═══ -->
+            <Grid Grid.Row="2" Margin="16,12,16,16">
+                <!-- Content panel (always full width) -->
+                <Border Classes="panel">
+                    <Grid>
+                        <!-- ═══ CHAT VIEW ═══ -->
+                        <Grid IsVisible="{Binding IsChatView}" RowDefinitions="Auto,*,Auto">
+                            <Grid Grid.Row="0" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Classes="eyebrow" Text="// MAIN CHAT"/>
+                                    <TextBlock Text="{Binding SelectedChatTitle}" Classes="title"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Grid.Row="1">
+                                <ListBox x:Name="ChatMessagesList" ItemsSource="{Binding ChatMessages}" SelectionMode="Single">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="models:ChatMessage">
+                                            <Border Classes="message" Margin="0,0,0,10">
+                                                <StackPanel>
+                                                    <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,0,0,8">
+                                                        <TextBlock Grid.Column="0" Text="{Binding DisplayRole}" Foreground="#FF8C42" FontWeight="Bold"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding Timestamp, Converter={x:Static converters:HumanizeDateConverter.Instance}}" Classes="muted" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                                        <ItemsControl Grid.Column="2"
+                                                                      ItemsSource="{Binding ActionBadges}"
+                                                                      IsVisible="{Binding HasActionBadges}"
+                                                                      HorizontalAlignment="Right"
+                                                                      VerticalAlignment="Center"
+                                                                      Margin="6,0">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal" Spacing="4"/>
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate DataType="models:ActionBadge">
+                                                                    <Border CornerRadius="8"
+                                                                            Padding="7,2"
+                                                                            Background="{Binding Bg}"
+                                                                            ToolTip.Tip="{Binding Tooltip}">
+                                                                        <TextBlock Text="{Binding Symbol}"
+                                                                                   Foreground="White"
+                                                                                   FontSize="11"
+                                                                                   FontWeight="Bold"
+                                                                                   VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                        <Button Grid.Column="3" Content="&#8942;" Classes="dots">
+                                                            <Button.Flyout>
+                                                                <MenuFlyout>
+                                                                    <MenuItem Header="Copy" Tag="{Binding Content}" Click="CopyMessageButton_OnClick"/>
+                                                                </MenuFlyout>
+                                                            </Button.Flyout>
+                                                        </Button>
+                                                    </Grid>
+                                                    <TextBox Classes="messageText"
+                                                             Text="{Binding Content}"
+                                                             IsReadOnly="True"
+                                                             AcceptsReturn="True"
+                                                             TextWrapping="Wrap"
+                                                             MaxHeight="520"
+                                                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                                                    <Border Classes="calendarCard" Margin="0,10,0,0" IsVisible="{Binding HasCalendarWidget}">
+                                                        <StackPanel>
+                                                            <Grid ColumnDefinitions="*,Auto">
+                                                                <TextBlock Grid.Column="0" Classes="calendarSubtitle" Text="This week" VerticalAlignment="Center"/>
+                                                                <TextBlock Grid.Column="1" Classes="calendarTitle" FontSize="16" Text="{Binding CalendarWidgetLabel}"/>
+                                                            </Grid>
+                                                            <UniformGrid Columns="7" Rows="1" Margin="0,8,0,4">
+                                                                <TextBlock Classes="calendarWeekday" Text="Sun"/>
+                                                                <TextBlock Classes="calendarWeekday" Text="Mon"/>
+                                                                <TextBlock Classes="calendarWeekday" Text="Tue"/>
+                                                                <TextBlock Classes="calendarWeekday" Text="Wed"/>
+                                                                <TextBlock Classes="calendarWeekday" Text="Thu"/>
+                                                                <TextBlock Classes="calendarWeekday" Text="Fri"/>
+                                                                <TextBlock Classes="calendarWeekday" Text="Sat"/>
+                                                            </UniformGrid>
+                                                            <ItemsControl ItemsSource="{Binding CalendarWidgetDays}">
+                                                                <ItemsControl.ItemsPanel>
+                                                                    <ItemsPanelTemplate>
+                                                                        <UniformGrid Columns="7" Rows="{Binding CalendarWidgetRows}"/>
+                                                                    </ItemsPanelTemplate>
+                                                                </ItemsControl.ItemsPanel>
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate DataType="models:CalendarDayCell">
+                                                                        <Border Classes="calendarCell compact"
+                                                                                Classes.otherMonth="{Binding !IsCurrentMonth}"
+                                                                                Classes.today="{Binding IsToday}"
+                                                                                Classes.selected="{Binding IsSelected}">
+                                                                            <StackPanel>
+                                                                                <TextBlock Classes="calendarDayNumber" Text="{Binding DayNumber}"/>
+                                                                                <ItemsControl ItemsSource="{Binding VisibleEvents}">
+                                                                                    <ItemsControl.ItemTemplate>
+                                                                                        <DataTemplate DataType="models:CalendarEvent">
+                                                                                            <Border Classes="calendarEventChip">
+                                                                                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                                                                                            </Border>
+                                                                                        </DataTemplate>
+                                                                                    </ItemsControl.ItemTemplate>
+                                                                                </ItemsControl>
+                                                                                <TextBlock Classes="calendarOverflow" Text="{Binding OverflowLabel}" IsVisible="{Binding HasOverflow}"/>
+                                                                            </StackPanel>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <Button Content="[ JUMP TO LATEST ]"
+                                        Classes="primary"
+                                        IsVisible="{Binding ShowJumpToLatest}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Bottom"
+                                        Margin="0,0,0,12"
+                                        Click="JumpToLatestButton_OnClick"/>
+                            </Grid>
+
+                            <!-- Input area with inline send button -->
+                            <Border Grid.Row="2" Classes="message" Margin="0,12,0,0" Padding="10">
+                                <Grid>
+                                    <TextBox x:Name="ChatInputBox"
+                                             Text="{Binding ChatInput}"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             MinHeight="86"
+                                             Watermark="message clio..."
+                                             Padding="12,12,48,12"/>
+                                    <Button Content="↵"
+                                            Background="Transparent"
+                                            Foreground="#FF8C42"
+                                            FontSize="20"
+                                            FontWeight="Bold"
+                                            BorderThickness="0"
+                                            CornerRadius="6"
+                                            Width="32" Height="28"
+                                            Padding="0"
+                                            Margin="0,0,6,6"
+                                            HorizontalContentAlignment="Center"
+                                            VerticalContentAlignment="Center"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            Command="{Binding SendChatCommand}"
+                                            ToolTip.Tip="Send (Enter)"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- ═══ MEMORY VIEW ═══ -->
+                        <Grid IsVisible="{Binding IsMemoryView}" RowDefinitions="Auto,Auto,*,Auto">
+                            <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                                <TextBlock Classes="eyebrow" Text="// MEMORY"/>
+                                <TextBlock Text="{Binding SelectedMemorySection}" Classes="title"/>
+                                <TextBlock Text="{Binding MemorySectionDescription}" Classes="muted"/>
+                            </StackPanel>
+
+                            <Grid Grid.Row="1" RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" Margin="0,0,0,14" IsVisible="{Binding !IsDatesMemorySection}">
+                                <TextBox Grid.Row="0" Grid.Column="0" Watermark="key" Text="{Binding MemoryKey}" Margin="0,0,8,8"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Watermark="value" Text="{Binding MemoryValue}" Margin="0,0,0,8"/>
+                                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                    <Button Content="[ SAVE MEMORY ]" Classes="primary" Command="{Binding SaveMemoryCommand}"/>
+                                    <Button Content="[ DELETE SELECTED ]" Classes="ghost" Command="{Binding DeleteSelectedMemoryCommand}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,14" IsVisible="{Binding IsDatesMemorySection}">
+                                <Button Content="[ DELETE SELECTED ]" Classes="ghost" Command="{Binding DeleteSelectedCalendarEventCommand}"/>
+                            </StackPanel>
+
+                            <Grid Grid.Row="2">
+                                <ListBox ItemsSource="{Binding VisibleMemoryItems}" SelectedItem="{Binding SelectedMemoryItem}" IsVisible="{Binding !IsDatesMemorySection}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="models:MemoryItem">
+                                            <Border Classes="message" Margin="0,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Key}" Foreground="#FF8C42" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding Value}" Classes="muted" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <ListBox ItemsSource="{Binding UpcomingCalendarEvents}" SelectedItem="{Binding SelectedUpcomingCalendarEvent}" IsVisible="{Binding IsDatesMemorySection}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="models:CalendarEvent">
+                                            <Border Classes="message" Margin="0,0,0,8">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Title}" Foreground="#FF8C42" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding DisplayStartsAt}" Classes="muted"/>
+                                                    <TextBlock Text="{Binding Details}" Classes="muted" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+
+                            <TextBlock Grid.Row="3" Text="{Binding MemoryStatus}" Classes="muted" Margin="0,12,0,0"/>
+                        </Grid>
+
+                        <!-- ═══ CALENDAR VIEW ═══ -->
+                        <Grid IsVisible="{Binding IsCalendarView}" RowDefinitions="Auto,*,210,140">
+                            <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                                <TextBlock Classes="eyebrow" Text="// CALENDAR"/>
+                                <TextBlock Text="Calendar" Classes="title"/>
+                                <TextBlock Text="Deadlines, commitments, schedule pressure, and dated entries." Classes="muted"/>
+                            </StackPanel>
+
+                            <Border Grid.Row="1" Classes="calendarCard">
+                                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+                                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding CalendarHeaderLabel}" Classes="calendarTitle"/>
+                                            <TextBlock Text="{Binding SelectedCalendarDateLabel}" Classes="calendarSubtitle"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Content="Week" Classes="calendarToggle" Classes.active="{Binding IsCalendarWeekView}" Command="{Binding SetCalendarViewModeCommand}" CommandParameter="Week"/>
+                                            <Button Content="2 Weeks" Classes="calendarToggle" Classes.active="{Binding IsCalendarTwoWeekView}" Command="{Binding SetCalendarViewModeCommand}" CommandParameter="TwoWeek"/>
+                                            <Button Content="Month" Classes="calendarToggle" Classes.active="{Binding IsCalendarMonthView}" Command="{Binding SetCalendarViewModeCommand}" CommandParameter="Month" Margin="0,0,14,0"/>
+                                            <Button Content="&#8249;" Classes="calendarNav" Command="{Binding PreviousCalendarPeriodCommand}"/>
+                                            <Button Content="Today" Classes="calendarNav" Command="{Binding GoToCalendarTodayCommand}"/>
+                                            <Button Content="&#8250;" Classes="calendarNav" Command="{Binding NextCalendarPeriodCommand}" Margin="0"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*,*,*">
+                                        <TextBlock Grid.Column="0" Text="Sun" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="1" Text="Mon" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="2" Text="Tue" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="3" Text="Wed" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="4" Text="Thu" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="5" Text="Fri" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="6" Text="Sat" Classes="calendarWeekday"/>
+                                    </Grid>
+
+                                    <ItemsControl Grid.Row="2" ItemsSource="{Binding CalendarDays}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Columns="7" Rows="{Binding CalendarGridRows}"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="models:CalendarDayCell">
+                                                <Button Classes="calendarCell" Tag="{Binding}" Click="CalendarDayButton_OnClick">
+                                                    <Border Classes="calendarCell"
+                                                            Classes.otherMonth="{Binding !IsCurrentMonth}"
+                                                            Classes.today="{Binding IsToday}"
+                                                            Classes.selected="{Binding IsSelected}">
+                                                        <DockPanel>
+                                                            <TextBlock DockPanel.Dock="Top" Text="{Binding DayNumber}" Classes="calendarDayNumber"/>
+                                                            <StackPanel DockPanel.Dock="Top" Margin="0,4,0,0">
+                                                                <ItemsControl ItemsSource="{Binding VisibleEvents}">
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate DataType="models:CalendarEvent">
+                                                                            <Border Classes="calendarEventChip">
+                                                                                <TextBlock Text="{Binding Title}"/>
+                                                                            </Border>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+                                                                <TextBlock Text="{Binding OverflowLabel}" Classes="calendarOverflow" IsVisible="{Binding HasOverflow}"/>
+                                                            </StackPanel>
+                                                        </DockPanel>
+                                                    </Border>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </Border>
+
+                            <Grid Grid.Row="2" ColumnDefinitions="2*,*" ColumnSpacing="16" Margin="0,16,0,0">
+                                <Border Grid.Column="0" Classes="calendarCard">
+                                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                                        <TextBlock Grid.Row="0" Text="{Binding SelectedCalendarDateLabel}" Classes="calendarTitle" FontSize="15"/>
+                                        <ListBox Grid.Row="1" ItemsSource="{Binding SelectedDayEvents}">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate DataType="models:CalendarEvent">
+                                                    <Border Classes="message" Margin="0,0,0,8">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding DisplayStartsAt}" Foreground="#CC6B2A" FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding Title}" FontWeight="Bold" TextWrapping="Wrap"/>
+                                                            <TextBlock Text="{Binding Details}" Foreground="#9999A6" TextWrapping="Wrap"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Column="1" Classes="calendarCard">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Add event" Classes="calendarTitle" FontSize="15" Margin="0,0,0,4"/>
+                                        <TextBox Watermark="Event title" Text="{Binding EventTitle}"/>
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                            <DatePicker Grid.Column="0" SelectedDate="{Binding EventDate}"/>
+                                            <TimePicker Grid.Column="1" SelectedTime="{Binding EventTime}"/>
+                                        </Grid>
+                                        <TextBox Watermark="Details" Text="{Binding EventDetails}" AcceptsReturn="True" TextWrapping="Wrap" Height="60"/>
+                                        <Button Content="[ ADD TO CALENDAR ]" Classes="primary" Command="{Binding AddEventCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <Grid Grid.Row="3" RowDefinitions="Auto,*" Margin="0,16,0,0">
+                                <TextBlock Grid.Row="0" Classes="label" Text="Scratchpad"/>
+                                <TextBox Grid.Row="1" Text="{Binding Scratchpad}" AcceptsReturn="True" TextWrapping="Wrap" Watermark="temporary context for clio..."/>
+                            </Grid>
+                        </Grid>
+
+                        <!-- ═══ TASKS VIEW ═══ -->
+                        <Grid IsVisible="{Binding IsTasksView}" RowDefinitions="Auto,Auto,*,Auto">
+                            <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                                <TextBlock Classes="eyebrow" Text="// TASKS"/>
+                                <TextBlock Text="Tasks" Classes="title"/>
+                                <TextBlock Text="Open loops, to-dos, and things without a date yet." Classes="muted"/>
+                            </StackPanel>
+
+                            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+                                <TextBox Grid.Column="0" Watermark="new task..." Text="{Binding NewTaskTitle}" Margin="0,0,8,0"/>
+                                <Button Grid.Column="1" Content="[ ADD ]" Classes="primary" Command="{Binding AddTaskCommand}"/>
+                            </Grid>
+
+                            <ListBox Grid.Row="2" ItemsSource="{Binding Tasks}" SelectedItem="{Binding SelectedTask}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="models:JournalTask">
+                                        <Border Classes="message" Classes.taskDone="{Binding IsDone}" Margin="0,0,0,8">
+                                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsDone, Mode=TwoWay}" Margin="0,0,12,0" VerticalAlignment="Center"
+                                                          Command="{Binding $parent[Window].DataContext.ToggleSelectedTaskCommand}"
+                                                          CommandParameter="{Binding}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+                                                    <TextBlock Text="{Binding Id, StringFormat='#{0}'}" Foreground="#8C7568" FontSize="11" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="2" Content="[ &#8594; CAL ]" Classes="ghost" Margin="8,0,0,0"
+                                                        Command="{Binding $parent[Window].DataContext.OpenScheduleTaskModalCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Grid.Column="3" Content="[ &#215; ]" Classes="ghost" Margin="4,0,0,0"
+                                                        Command="{Binding $parent[Window].DataContext.DeleteSelectedTaskCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <TextBlock Grid.Row="3" Text="{Binding Tasks.Count, StringFormat='{}{0} task(s)'}" Classes="muted" Margin="0,12,0,0"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- ═══ OVERLAY DRAWER (left sidebar) ═══ -->
+                <Border Background="#231A15"
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Stretch"
+                        CornerRadius="0,16,16,0"
+                        BoxShadow="4 0 16 0 #40000000"
+                        Padding="16"
+                        IsVisible="{Binding IsThreadsPanelOpen}"
+                        ZIndex="10">
+                    <Grid RowDefinitions="Auto,*">
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Classes="eyebrow" Text="// CLIO"/>
+                                <TextBlock Text="{Binding CurrentView}" Classes="title"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="&#8249;&#8249;" Classes="icon" FontSize="14" FontWeight="Bold"
+                                    Command="{Binding ToggleThreadsPanelCommand}" VerticalAlignment="Top"
+                                    ToolTip.Tip="Collapse panel"/>
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+                            <!-- Chat threads list -->
+                            <Grid IsVisible="{Binding IsChatView}" RowDefinitions="Auto,*,Auto" RowSpacing="10">
+                                <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Chats" Foreground="#FF8C42" FontWeight="Bold"/>
+                                        <TextBlock Text="Main and scoped threads" Classes="muted" FontSize="12"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="+" Classes="icon" Command="{Binding CreateChatThreadCommand}" VerticalAlignment="Center" Margin="0" FontSize="18"/>
+                                </Grid>
+
+                                <ListBox Grid.Row="1" Classes="chatList" ItemsSource="{Binding ChatThreads}" SelectedItem="{Binding SelectedChatThread}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate DataType="models:ChatThread">
+                                            <Grid ColumnDefinitions="*,Auto" MinHeight="34" Margin="2,0">
+                                                <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="#E8D5C4" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                <Button Grid.Column="1" Content="..." Classes="icon" VerticalAlignment="Center">
+                                                    <Button.Flyout>
+                                                        <MenuFlyout>
+                                                            <MenuItem Header="Rename" Tag="{Binding}" Click="RenameChatThreadMenuItem_OnClick"/>
+                                                            <MenuItem Header="Summarize" Tag="{Binding}" Click="SummarizeChatThreadMenuItem_OnClick"/>
+                                                            <MenuItem Header="Clear messages" Tag="{Binding}" Click="ClearChatThreadMenuItem_OnClick"/>
+                                                            <MenuItem Header="Delete" Tag="{Binding}" Click="DeleteChatThreadMenuItem_OnClick"/>
+                                                        </MenuFlyout>
+                                                    </Button.Flyout>
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <TextBlock Grid.Row="2" Text="{Binding ChatSidebarStatus}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                            </Grid>
+
+                            <!-- Memory categories -->
+                            <StackPanel IsVisible="{Binding IsMemoryView}" Spacing="6">
+                                <Button Content="[ USER ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="user" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ PEOPLE ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="people" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ PROJECTS ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="projects" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ GOALS ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="goals" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ CONTEXT ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="context" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ KNOWLEDGE ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="knowledge" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ SYSTEMS ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="systems" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ TOOLS ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="tools" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ META ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="meta" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ FLEX ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="flex" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ DATES ]" Classes="ghost" Command="{Binding ShowMemoryCategoryCommand}" CommandParameter="dates" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <!-- Calendar navigation -->
+                            <StackPanel IsVisible="{Binding IsCalendarView}" Spacing="10">
+                                <TextBlock Text="Period" Classes="label"/>
+                                <TextBlock Text="{Binding CalendarHeaderLabel}" Foreground="#FF8C42" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <Button Content="[ PREVIOUS ]" Classes="ghost" Command="{Binding PreviousCalendarPeriodCommand}" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ TODAY ]" Classes="primary" Command="{Binding GoToCalendarTodayCommand}" HorizontalAlignment="Stretch"/>
+                                <Button Content="[ NEXT ]" Classes="ghost" Command="{Binding NextCalendarPeriodCommand}" HorizontalAlignment="Stretch"/>
+                                <TextBlock Text="Selected day" Classes="label" Margin="0,18,0,0"/>
+                                <TextBlock Text="{Binding SelectedCalendarDateLabel}" Classes="muted" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ═══ SCHEDULE TASK MODAL ═══ -->
+        <Border IsVisible="{Binding IsScheduleTaskModalOpen}" Background="#CC1A1210">
+            <Border Classes="modal" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="18">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Classes="eyebrow" Text="// TASKS"/>
+                            <TextBlock Text="Move to calendar" Classes="title"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="[ CLOSE ]" Classes="ghost" Command="{Binding CloseScheduleTaskModalCommand}" VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1">
+                        <TextBlock Classes="label" Text="Task"/>
+                        <TextBlock Text="{Binding TaskBeingScheduled.Title}" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <DatePicker Grid.Column="0" SelectedDate="{Binding ScheduleTaskDate}"/>
+                        <TimePicker Grid.Column="1" SelectedTime="{Binding ScheduleTaskTime}"/>
+                    </Grid>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="[ CANCEL ]" Classes="ghost" Command="{Binding CloseScheduleTaskModalCommand}"/>
+                        <Button Content="[ ADD TO CALENDAR ]" Classes="primary" Command="{Binding ConfirmScheduleTaskCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ═══ CHAT RENAME MODAL ═══ -->
+        <Border IsVisible="{Binding IsChatRenameOpen}" Background="#CC1A1210">
+            <Border Classes="modal" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="18">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Classes="eyebrow" Text="// CHAT"/>
+                            <TextBlock Text="Rename chat" Classes="title"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="[ CLOSE ]" Classes="ghost" Command="{Binding CloseChatRenameFromDialogCommand}" VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <TextBox x:Name="RenameChatTitleBox" Grid.Row="1" Text="{Binding RenameChatTitle}" Watermark="chat title"/>
+
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="[ CANCEL ]" Classes="ghost" Command="{Binding CloseChatRenameFromDialogCommand}"/>
+                        <Button Content="[ SAVE ]" Classes="primary" Command="{Binding SaveChatRenameFromDialogCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ═══ SETTINGS MODAL ═══ -->
+        <Border IsVisible="{Binding IsSettingsOpen}" Background="#CC1A1210">
+            <Border Classes="modal" Width="560" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="18">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Classes="eyebrow" Text="// SETTINGS"/>
+                            <TextBlock Text="DeepSeek" Classes="title"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="[ CLOSE ]" Classes="ghost" Command="{Binding CloseSettingsCommand}" VerticalAlignment="Top"/>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1">
+                        <TextBlock Classes="label" Text="DeepSeek API key"/>
+                        <TextBox Text="{Binding DeepSeekApiKey}" PasswordChar="*" Watermark="sk-..."/>
+                        <TextBlock Text="Stored locally in CLIo settings and loaded when the app starts." Classes="muted" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="2" Text="{Binding SettingsStatus}" Foreground="#FF8C42" TextWrapping="Wrap"/>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="[ CANCEL ]" Classes="ghost" Command="{Binding CloseSettingsCommand}"/>
+                        <Button Content="[ SAVE SETTINGS ]" Classes="primary" Command="{Binding SaveSettingsCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ═══ MEMORY TOAST ═══ -->
+        <Border Classes="modal" IsVisible="{Binding MemoryToastVisible}"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                Margin="0,0,24,24" MaxWidth="380" CornerRadius="12">
+            <StackPanel Spacing="12">
+                <TextBlock Text="{Binding MemoryToastMessage}" TextWrapping="Wrap"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <Button Content="[ SKIP ]" Classes="ghost" Command="{Binding DismissMemoryToastCommand}"/>
+                    <Button Content="[ STORE ]" Classes="primary" Command="{Binding AcceptMemoryToastCommand}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ═══ SCANLINE OVERLAY ═══ -->
+        <Canvas IsHitTestVisible="False" ZIndex="100">
+            <Canvas.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,1%">
+                    <GradientStop Color="#00000000" Offset="0"/>
+                    <GradientStop Color="#00000000" Offset="0.5"/>
+                    <GradientStop Color="#08FF8C42" Offset="0.5"/>
+                    <GradientStop Color="#08FF8C42" Offset="1"/>
+                </LinearGradientBrush>
+            </Canvas.Background>
+        </Canvas>
+    </Grid>
+</Window>

@@ -1,0 +1,37 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="CLIo"
+           Manufacturer="CLIo"
+           Version="1.0.0.0"
+           UpgradeCode="B8F5E2A1-3C4D-4E5F-A6B7-8C9D0E1F2A3B"
+           Scope="perUser">
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of CLIo is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="INSTALLFOLDER" Name="CLIo" />
+    </StandardDirectory>
+
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="!(bindpath.CLIo)\**" />
+    </ComponentGroup>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="1A2B3C4D-5E6F-7890-ABCD-EF1234567891">
+        <Shortcut Id="CLIoShortcut"
+                  Name="CLIo"
+                  Description="CLIo Personal Organizer"
+                  Target="[INSTALLFOLDER]CLIo.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU" Key="Software\CLIo" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+        <RemoveFolder Id="RemoveMenuFolder" On="uninstall" />
+      </Component>
+    </StandardDirectory>
+
+    <Feature Id="ProductFeature" Title="CLIo" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+
+  </Package>
+</Wix>
