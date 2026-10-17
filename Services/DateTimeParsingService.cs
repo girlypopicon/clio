@@ -27,6 +27,28 @@ public sealed class DateTimeParsingService
         return dates;
     }
 
+    /// <summary>Parses the first date/time in the text and also returns the phrase that matched.</summary>
+    public (DateTimeOffset When, string MatchedText)? ParseFirstWithText(string text, DateTimeOffset? reference = null)
+    {
+        var refTime = (reference ?? DateTimeOffset.Now).DateTime;
+        var results = DateTimeRecognizer.RecognizeDateTime(text, Culture.English, refTime: refTime);
+
+        foreach (var result in results)
+        {
+            if (result.Resolution?.TryGetValue("values", out var valuesObj) != true
+                || valuesObj is not IList<Dictionary<string, string>> values)
+                continue;
+
+            foreach (var entry in values)
+            {
+                if (entry.TryGetValue("value", out var dateStr) && DateTimeOffset.TryParse(dateStr, out var parsed))
+                    return (parsed, result.Text);
+            }
+        }
+
+        return null;
+    }
+
     public DateTimeOffset? ParseSingleDate(string text, DateTimeOffset? reference = null)
     {
         var dates = ParseDates(text, reference);

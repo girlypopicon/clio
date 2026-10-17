@@ -9,6 +9,20 @@
         <local:ViewLocator/>
     </Application.DataTemplates>
   
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="/Assets/clio.ico" ToolTipText="CLIo" Clicked="TrayIcon_OnClicked">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Open CLIo" Click="OpenMenuItem_OnClick"/>
+                        <NativeMenuItemSeparator/>
+                        <NativeMenuItem Header="Quit CLIo" Click="QuitMenuItem_OnClick"/>
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
+
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>

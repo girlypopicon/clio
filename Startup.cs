@@ -35,6 +35,7 @@ public static class Startup
         services.AddSingleton<IMemoryService, MemoryService>();
         services.AddSingleton<ICalendarService, CalendarService>();
         services.AddSingleton<ITaskService, TaskService>();
+        services.AddSingleton<ReminderService>();
 
         // BotSharp agent routing
         services.AddSingleton<ClioRouter>();

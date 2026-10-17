@@ -30,10 +30,21 @@ public partial class MainWindow : Window
         ChatInputBox.AddHandler(InputElement.KeyDownEvent, ChatInputBox_OnKeyDown, RoutingStrategies.Tunnel);
         KeyDown += MainWindow_OnKeyDown;
         DataContextChanged += OnDataContextChanged;
+        Closing += MainWindow_OnClosing;
         Opened += (_, _) => ScrollChatToBottom(force: true);
         Opened += (_, _) => ApplyThemedTitleBar();
         ChatMessagesList.AddHandler(InputElement.PointerPressedEvent, ChatMessagesList_OnPointerPressed, RoutingStrategies.Tunnel);
         ChatMessagesList.AddHandler(InputElement.PointerReleasedEvent, ChatMessagesList_OnPointerReleased, RoutingStrategies.Tunnel);
+    }
+
+    private void MainWindow_OnClosing(object? sender, WindowClosingEventArgs e)
+    {
+        // Close button minimizes to the system tray so reminders keep firing; Quit lives in the tray menu.
+        if (!App.IsQuitting && e.CloseReason == WindowCloseReason.WindowClosing)
+        {
+            e.Cancel = true;
+            Hide();
+        }
     }
 
     private void ApplyThemedTitleBar()

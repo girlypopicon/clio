@@ -50,7 +50,7 @@ public sealed class SystemPromptBuilder
         sb.AppendLine("Memory system: hierarchical colon-delimited keys organized into 10 categories (user, projects, people, systems, tools, goals, knowledge, context, meta, flex). Dynamic subkeys are allowed freely. Preferences use flex:preference:<slug>, patterns use flex:pattern:<slug>.");
         sb.AppendLine("Calendar: stores events with title, ISO 8601 start time, and details. Supports week/two-week/month views.");
         sb.AppendLine("Tasks: simple title + done/open status.");
-        sb.AppendLine("Commands: ++ (add event/task), -- (delete event/task), == (reschedule event), __ (display/navigate/memory operations).");
+        sb.AppendLine("Commands: ++ (add event/task), -- (delete event/task), == (reschedule event), @@ (set a popup reminder, e.g. @@ call mom in 30 minutes), __ (display/navigate/memory operations).");
         sb.AppendLine("__ sub-commands: __tasks, __memory, __<category> (e.g. __user, __people), __forget <key>, __rename <old> <new>, __merge <target> <source>, __search <term>, __compact.");
         sb.AppendLine("All data is stored locally — no cloud sync. Database is encrypted at rest. API keys are protected with Windows DPAPI.");
         sb.AppendLine("PROACTIVE MEMORY: When the user mentions a topic that relates to something in your confirmed memory, naturally weave that knowledge into your response. For example, if they mention a person and you have details about that person stored, reference what you know. Don't list facts robotically — integrate them conversationally. If the memory seems outdated, ask if it's still accurate.");
@@ -129,7 +129,7 @@ public sealed class SystemPromptBuilder
         new("v0.1.0", "2026-06-01",
         [
             "Initial release: chat with DeepSeek LLM, 50-key memory system, calendar, tasks",
-            "Prefix commands: ++ (add), -- (delete), == (reschedule), __ (display/navigate)",
+            "Prefix commands: ++ (add), -- (delete), == (reschedule), @@ (reminder), __ (display/navigate)",
             "Chat threading with Main Chat and scoped chats",
             "Passive memory extraction with confirmation toasts",
             "Calendar views: week, two-week, month with inline calendar widget",

@@ -44,8 +44,12 @@ public partial class MainWindowViewModel : ViewModelBase
         Agents.ClioRouter router,
         ClioStateService clioState,
         DevLogService devLog,
-        WebSearchService webSearch)
+        WebSearchService webSearch,
+        ReminderService reminderService,
+        DateTimeParsingService dateTimeParser)
     {
+        this.reminderService = reminderService;
+        this.dateTimeParser = dateTimeParser;
         this.database = database;
         this.llmProvider = llmProvider;
         this.dataProtection = dataProtection;
@@ -59,6 +63,8 @@ public partial class MainWindowViewModel : ViewModelBase
         this.webSearch = webSearch;
         Initialization = LoadAsync();
     }
+    private readonly ReminderService reminderService;
+    private readonly DateTimeParsingService dateTimeParser;
     private ScopedChatSuggestion? pendingScopedChatSuggestion;
     private HashSet<string>? pendingMemoryConfirmationKeys;
     private List<MemoryCandidate>? pendingMemoryCandidates;
@@ -857,7 +863,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         var candidate = input[..2];
-        if (candidate is "++" or "--" or "==" or "__")
+        if (candidate is "++" or "--" or "==" or "__" or "@@")
         {
             prefix = candidate;
             body = input[2..].Trim();
@@ -878,6 +884,12 @@ public partial class MainWindowViewModel : ViewModelBase
         if (prefix == "__")
         {
             await HandleDisplayCommandAsync(body, now);
+            return;
+        }
+
+        if (prefix == "@@")
+        {
+            await HandleReminderCommandAsync(body, now);
             return;
         }
 
@@ -931,9 +943,65 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private async Task HandleReminderCommandAsync(string body, DateTimeOffset now)
+    {
+        var parsed = dateTimeParser.ParseFirstWithText(body, now);
+        string reply;
+
+        if (parsed is null)
+        {
+            reply = "When should I remind you? Try: @@ call mom in 30 minutes, or @@ take meds tomorrow at 8am.";
+        }
+        else
+        {
+            var (when, matched) = parsed.Value;
+            if (when <= now && now - when < TimeSpan.FromDays(1))
+            {
+                // A bare time like "5pm" that already passed today means tomorrow.
+                when = when.AddDays(1);
+            }
+
+            var title = body.Replace(matched, string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
+            title = System.Text.RegularExpressions.Regex.Replace(title, @"\s+(to|at|on|by|in|for|me)$|^(to|me to|remind me to)\s+", string.Empty, System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim(' ', ',', '.');
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                title = body.Trim();
+            }
+
+            await reminderService.AddAsync(title, when);
+            reply = $"Okay, I'll remind you: {title} ({when:ddd MMM d, h:mm tt}).";
+        }
+
+        var assistant = new ChatMessage { Role = "assistant", Content = reply, Timestamp = DateTimeOffset.Now };
+        ChatMessages.Add(assistant);
+        await database.AddChatMessageAsync(SelectedThreadId, assistant.Role, assistant.Content, assistant.Timestamp);
+    }
+
     private async Task HandleDisplayCommandAsync(string body, DateTimeOffset now)
     {
         var normalized = body.ToLowerInvariant().Trim();
+
+        if (normalized is "reminders" or "reminder" or "remind")
+        {
+            var pending = await reminderService.GetPendingAsync();
+            var text = pending.Count == 0
+                ? "No pending reminders. Add one with: @@ call mom in 30 minutes"
+                : "Pending reminders:\n" + string.Join("\n", pending.Select(r => $"#{r.Id} | {r.DisplayDueAt} | {r.Title}"))
+                  + "\n\nCancel one with __unremind <id>.";
+            var listing = new ChatMessage { Role = "assistant", Content = text, Timestamp = DateTimeOffset.Now };
+            ChatMessages.Add(listing);
+            await database.AddChatMessageAsync(SelectedThreadId, listing.Role, listing.Content, listing.Timestamp);
+            return;
+        }
+
+        if (normalized.StartsWith("unremind ") && int.TryParse(normalized[9..].Trim().TrimStart('#'), out var reminderId))
+        {
+            await reminderService.DismissAsync(reminderId);
+            var cancelled = new ChatMessage { Role = "assistant", Content = $"Cancelled reminder #{reminderId}.", Timestamp = DateTimeOffset.Now };
+            ChatMessages.Add(cancelled);
+            await database.AddChatMessageAsync(SelectedThreadId, cancelled.Role, cancelled.Content, cancelled.Timestamp);
+            return;
+        }
 
         if (normalized is "tasks" or "task" or "todo" or "to-do" or "todos" or "to-dos")
         {

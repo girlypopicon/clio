@@ -161,6 +161,87 @@ public sealed class JournalDatabaseService
         });
     }
 
+    public Task<int> AddReminderAsync(string title, DateTimeOffset dueAt, int? sourceEventId = null)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "INSERT INTO reminders(title, due_at, source_event_id) VALUES ($title, $dueAt, $eventId); SELECT last_insert_rowid();";
+            command.Parameters.AddWithValue("$title", title);
+            command.Parameters.AddWithValue("$dueAt", dueAt.ToString("O"));
+            command.Parameters.AddWithValue("$eventId", (object?)sourceEventId ?? DBNull.Value);
+            return Convert.ToInt32(command.ExecuteScalar());
+        });
+    }
+
+    public Task<IReadOnlyList<Reminder>> GetPendingRemindersAsync()
+    {
+        return Task.Run<IReadOnlyList<Reminder>>(() =>
+        {
+            var reminders = new List<Reminder>();
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT id, title, due_at, source_event_id FROM reminders WHERE status = 'pending' ORDER BY due_at LIMIT 200";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                if (!DateTimeOffset.TryParse(reader.GetString(2), out var dueAt))
+                {
+                    continue;
+                }
+
+                reminders.Add(new Reminder
+                {
+                    Id = reader.GetInt32(0),
+                    Title = reader.GetString(1),
+                    DueAt = dueAt,
+                    SourceEventId = reader.IsDBNull(3) ? null : reader.GetInt32(3)
+                });
+            }
+
+            return reminders;
+        });
+    }
+
+    public Task<bool> ReminderExistsForEventAsync(int eventId)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT 1 FROM reminders WHERE source_event_id = $eventId LIMIT 1";
+            command.Parameters.AddWithValue("$eventId", eventId);
+            return command.ExecuteScalar() is not null;
+        });
+    }
+
+    public Task SetReminderStatusAsync(int id, string status)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE reminders SET status = $status WHERE id = $id";
+            command.Parameters.AddWithValue("$status", status);
+            command.Parameters.AddWithValue("$id", id);
+            command.ExecuteNonQuery();
+        });
+    }
+
+    public Task SnoozeReminderAsync(int id, DateTimeOffset dueAt)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE reminders SET due_at = $dueAt, status = 'pending' WHERE id = $id";
+            command.Parameters.AddWithValue("$dueAt", dueAt.ToString("O"));
+            command.Parameters.AddWithValue("$id", id);
+            command.ExecuteNonQuery();
+        });
+    }
+
     public Task DeleteEventAsync(int id)
     {
         return Task.Run(() =>
@@ -1160,6 +1241,14 @@ public sealed class JournalDatabaseService
                 title TEXT NOT NULL,
                 starts_at TEXT NOT NULL,
                 details TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS reminders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                due_at TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                source_event_id INTEGER
             );
 
             CREATE TABLE IF NOT EXISTS journal_tasks (
