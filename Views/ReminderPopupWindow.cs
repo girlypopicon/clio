@@ -25,8 +25,8 @@ public sealed class ReminderPopupWindow : Window
         Background = Brushes.Transparent;
         Title = "CLIo reminder";
 
-        var accent = new SolidColorBrush(Color.Parse("#FF8C42"));
-        var muted = new SolidColorBrush(Color.Parse("#8C7568"));
+        var accent = new SolidColorBrush(Color.Parse("#C9CED6"));
+        var muted = new SolidColorBrush(Color.Parse("#7B818C"));
 
         Button MakeButton(string text, bool primary)
         {
@@ -34,9 +34,9 @@ public sealed class ReminderPopupWindow : Window
             {
                 Content = text,
                 Padding = new Thickness(12, 5),
-                Background = primary ? accent : new SolidColorBrush(Color.Parse("#2A1F19")),
-                Foreground = primary ? new SolidColorBrush(Color.Parse("#1A1210")) : Brushes.White,
-                BorderBrush = new SolidColorBrush(Color.Parse("#3D2E24"))
+                Background = primary ? accent : new SolidColorBrush(Color.Parse("#17191D")),
+                Foreground = primary ? new SolidColorBrush(Color.Parse("#0B0C0E")) : Brushes.White,
+                BorderBrush = new SolidColorBrush(Color.Parse("#2A2D33"))
             };
         }
 
@@ -49,10 +49,10 @@ public sealed class ReminderPopupWindow : Window
 
         Content = new Border
         {
-            Background = new SolidColorBrush(Color.Parse("#1A1210")),
+            Background = new SolidColorBrush(Color.Parse("#0B0C0E")),
             BorderBrush = accent,
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(14),
+            CornerRadius = new CornerRadius(6),
             Padding = new Thickness(16),
             Child = new StackPanel
             {

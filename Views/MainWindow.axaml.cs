@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -61,9 +62,9 @@ public partial class MainWindow : Window
         }
 
         // DWM caption/text/border colors are 0x00BBGGRR.
-        var captionColor = 0x0010121Au; // #1A1210 in BGR
-        var textColor = 0x00428CFFu;    // #FF8C42 in BGR
-        var borderColor = 0x00242E3Du;  // #3D2E24 in BGR
+        var captionColor = 0x000E0C0Bu; // #0B0C0E in BGR
+        var textColor = 0x00D6CEC9u;    // #C9CED6 in BGR
+        var borderColor = 0x00332D2Au;  // #2A2D33 in BGR
 
         DwmSetWindowAttribute(handle, DwmwaCaptionColor, ref captionColor, sizeof(uint));
         DwmSetWindowAttribute(handle, DwmwaTextColor, ref textColor, sizeof(uint));
@@ -455,6 +456,29 @@ public partial class MainWindow : Window
                 viewModel.ShowJumpToLatest = false;
             }
         }, DispatcherPriority.Background);
+    }
+
+    private void TitleBar_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        // Custom title bar (NoChrome): start a window drag, or toggle maximize on double-click.
+        // Ignore presses that land on a button so the menu and window controls keep working.
+        if (e.Source is Visual source && source.FindAncestorOfType<Button>(includeSelf: true) is not null)
+        {
+            return;
+        }
+
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        if (e.ClickCount == 2)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            return;
+        }
+
+        BeginMoveDrag(e);
     }
 
     private void MinimizeButton_OnClick(object? sender, RoutedEventArgs e)

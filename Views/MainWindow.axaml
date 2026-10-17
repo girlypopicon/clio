@@ -14,7 +14,7 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/clio.ico"
         FontFamily="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"
-        Background="#1A1210"
+        Background="#0B0C0E"
         Title="CLIo"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
@@ -26,17 +26,17 @@
 
     <Window.Styles>
         <Style Selector="Border.panel">
-            <Setter Property="Background" Value="#231A15"/>
-            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="Background" Value="#121316"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="16"/>
         </Style>
         <Style Selector="Border.message">
-            <Setter Property="Background" Value="#2A1F19"/>
-            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="13"/>
             <Setter Property="Transitions">
                 <Transitions>
@@ -46,53 +46,53 @@
             </Setter>
         </Style>
         <Style Selector="Border.message:pointerover">
-            <Setter Property="BorderBrush" Value="#FF8C42"/>
-            <Setter Property="BoxShadow" Value="0 0 4 0 #66FF8C42, 0 0 14 0 #33FF8C42, 0 0 28 0 #15FF8C42"/>
+            <Setter Property="BorderBrush" Value="#C9CED6"/>
+            <Setter Property="BoxShadow" Value="0 0 4 0 #66C9CED6, 0 0 14 0 #33C9CED6, 0 0 28 0 #15C9CED6"/>
         </Style>
         <Style Selector="Border.rail">
-            <Setter Property="Background" Value="#231A15"/>
-            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="Background" Value="#121316"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="8"/>
         </Style>
         <Style Selector="Border.modal">
-            <Setter Property="Background" Value="#1A1210"/>
-            <Setter Property="BorderBrush" Value="#FF8C42"/>
+            <Setter Property="Background" Value="#0B0C0E"/>
+            <Setter Property="BorderBrush" Value="#C9CED6"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="22"/>
         </Style>
         <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="#E8D5C4"/>
+            <Setter Property="Foreground" Value="#D7DAE0"/>
         </Style>
         <Style Selector="TextBlock.eyebrow">
-            <Setter Property="Foreground" Value="#FF8C42"/>
+            <Setter Property="Foreground" Value="#C9CED6"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="LetterSpacing" Value="2"/>
         </Style>
         <Style Selector="TextBlock.title">
-            <Setter Property="Foreground" Value="#FFA654"/>
+            <Setter Property="Foreground" Value="#D5D9E0"/>
             <Setter Property="FontSize" Value="19"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         <Style Selector="TextBlock.label">
-            <Setter Property="Foreground" Value="#FFA654"/>
+            <Setter Property="Foreground" Value="#D5D9E0"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,0,0,8"/>
         </Style>
         <Style Selector="TextBlock.muted">
-            <Setter Property="Foreground" Value="#8C7568"/>
+            <Setter Property="Foreground" Value="#7B818C"/>
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#1A1210"/>
-            <Setter Property="Foreground" Value="#FFB347"/>
-            <Setter Property="CaretBrush" Value="#FFB347"/>
-            <Setter Property="SelectionBrush" Value="#3D2E24"/>
-            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="Background" Value="#0B0C0E"/>
+            <Setter Property="Foreground" Value="#E6E9EE"/>
+            <Setter Property="CaretBrush" Value="#E6E9EE"/>
+            <Setter Property="SelectionBrush" Value="#2A2D33"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="12"/>
             <Setter Property="FontFamily" Value="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"/>
         </Style>
@@ -101,35 +101,35 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="CornerRadius" Value="0"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Foreground" Value="#E8D5C4"/>
+            <Setter Property="Foreground" Value="#D7DAE0"/>
         </Style>
         <Style Selector="Button">
-            <Setter Property="Background" Value="#1A1210"/>
-            <Setter Property="Foreground" Value="#FFB347"/>
-            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="Background" Value="#0B0C0E"/>
+            <Setter Property="Foreground" Value="#E6E9EE"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="3"/>
             <Setter Property="Padding" Value="16,9"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
             <Setter Property="FontFamily" Value="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"/>
         </Style>
         <Style Selector="Button:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2A1F19"/>
-            <Setter Property="TextBlock.Foreground" Value="#FF8C42"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="TextBlock.Foreground" Value="#C9CED6"/>
         </Style>
         <Style Selector="Button.primary">
-            <Setter Property="Background" Value="#FF8C42"/>
-            <Setter Property="Foreground" Value="#1A1210"/>
-            <Setter Property="BorderBrush" Value="#FF8C42"/>
+            <Setter Property="Background" Value="#C9CED6"/>
+            <Setter Property="Foreground" Value="#0B0C0E"/>
+            <Setter Property="BorderBrush" Value="#C9CED6"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#FFB347"/>
-            <Setter Property="TextBlock.Foreground" Value="#1A1210"/>
+            <Setter Property="Background" Value="#E6E9EE"/>
+            <Setter Property="TextBlock.Foreground" Value="#0B0C0E"/>
         </Style>
         <Style Selector="Button.ghost">
-            <Setter Property="Background" Value="#1A1210"/>
-            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="Background" Value="#0B0C0E"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
         </Style>
         <Style Selector="Button.icon">
             <Setter Property="Background" Value="Transparent"/>
@@ -149,18 +149,18 @@
         <Style Selector="Button.dots">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#8C7568"/>
+            <Setter Property="Foreground" Value="#7B818C"/>
             <Setter Property="Padding" Value="6,2"/>
             <Setter Property="Margin" Value="0"/>
             <Setter Property="MinWidth" Value="28"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="CornerRadius" Value="2"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <Style Selector="Button.dots:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2A1F19"/>
-            <Setter Property="TextBlock.Foreground" Value="#FF8C42"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="TextBlock.Foreground" Value="#C9CED6"/>
         </Style>
         <Style Selector="ListBox">
             <Setter Property="Background" Value="Transparent"/>
@@ -174,7 +174,7 @@
         <Style Selector="ListBox.chatList ListBoxItem /template/ ContentPresenter">
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="3"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
@@ -183,12 +183,12 @@
             </Setter>
         </Style>
         <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2A1F19"/>
+            <Setter Property="Background" Value="#17191D"/>
         </Style>
         <Style Selector="ListBox.chatList ListBoxItem:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="#FF8C42"/>
-            <Setter Property="BoxShadow" Value="0 0 4 0 #66FF8C42, 0 0 14 0 #33FF8C42, 0 0 28 0 #15FF8C42"/>
+            <Setter Property="BorderBrush" Value="#C9CED6"/>
+            <Setter Property="BoxShadow" Value="0 0 4 0 #66C9CED6, 0 0 14 0 #33C9CED6, 0 0 28 0 #15C9CED6"/>
         </Style>
         <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent"/>
@@ -200,63 +200,63 @@
 
         <!-- Calendar: warm light card motif -->
         <Style Selector="Border.calendarCard">
-            <Setter Property="Background" Value="#F5F0EB"/>
-            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="Background" Value="#121316"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="20"/>
         </Style>
         <Style Selector="Border.calendarCard TextBlock">
-            <Setter Property="Foreground" Value="#2B2B33"/>
+            <Setter Property="Foreground" Value="#D7DAE0"/>
         </Style>
         <Style Selector="TextBlock.calendarTitle">
-            <Setter Property="Foreground" Value="#1F1F27"/>
+            <Setter Property="Foreground" Value="#E6E9EE"/>
             <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
         <Style Selector="TextBlock.calendarSubtitle">
-            <Setter Property="Foreground" Value="#9999A6"/>
+            <Setter Property="Foreground" Value="#7B818C"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
         <Style Selector="Button.calendarNav">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#3A3A45"/>
-            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Foreground" Value="#C9CED6"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="12,7"/>
             <Setter Property="Margin" Value="0,0,6,0"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
         <Style Selector="Button.calendarNav:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#EBEBF0"/>
-            <Setter Property="TextBlock.Foreground" Value="#1F1F27"/>
+            <Setter Property="Background" Value="#23262B"/>
+            <Setter Property="TextBlock.Foreground" Value="#E6E9EE"/>
         </Style>
         <Style Selector="Button.calendarToggle">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#6F6F7C"/>
-            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Foreground" Value="#9AA0AA"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="12,7"/>
             <Setter Property="Margin" Value="0,0,6,0"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         <Style Selector="Button.calendarToggle:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#EBEBF0"/>
+            <Setter Property="Background" Value="#23262B"/>
         </Style>
         <Style Selector="Button.calendarToggle.active">
-            <Setter Property="Background" Value="#3D2E24"/>
-            <Setter Property="Foreground" Value="#FFB347"/>
-            <Setter Property="BorderBrush" Value="#3D2E24"/>
+            <Setter Property="Background" Value="#2A2D33"/>
+            <Setter Property="Foreground" Value="#E6E9EE"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
         </Style>
         <Style Selector="Button.calendarToggle.active:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#3D2E24"/>
-            <Setter Property="TextBlock.Foreground" Value="#FFB347"/>
+            <Setter Property="Background" Value="#2A2D33"/>
+            <Setter Property="TextBlock.Foreground" Value="#E6E9EE"/>
         </Style>
         <Style Selector="TextBlock.calendarWeekday">
-            <Setter Property="Foreground" Value="#ABABB6"/>
+            <Setter Property="Foreground" Value="#7B818C"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="Bold"/>
@@ -274,10 +274,10 @@
             <Setter Property="Background" Value="Transparent"/>
         </Style>
         <Style Selector="Border.calendarCell">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#ECECF1"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="BorderBrush" Value="#23262B"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="3"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="MinHeight" Value="120"/>
         </Style>
@@ -285,11 +285,11 @@
             <Setter Property="Opacity" Value="0.45"/>
         </Style>
         <Style Selector="Border.calendarCell.today">
-            <Setter Property="BorderBrush" Value="#FF8C42"/>
+            <Setter Property="BorderBrush" Value="#C9CED6"/>
             <Setter Property="BorderThickness" Value="2"/>
         </Style>
         <Style Selector="Border.calendarCell.selected">
-            <Setter Property="Background" Value="#FFF5EC"/>
+            <Setter Property="Background" Value="#1E2126"/>
         </Style>
         <Style Selector="Border.calendarCell.compact">
             <Setter Property="MinHeight" Value="92"/>
@@ -310,72 +310,73 @@
             <Setter Property="FontSize" Value="10"/>
         </Style>
         <Style Selector="TextBlock.calendarDayNumber">
-            <Setter Property="Foreground" Value="#2B2B33"/>
+            <Setter Property="Foreground" Value="#D7DAE0"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="16"/>
         </Style>
         <Style Selector="Border.calendarEventChip">
-            <Setter Property="Background" Value="#FFF0E0"/>
+            <Setter Property="Background" Value="#23262B"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="7,3"/>
             <Setter Property="Margin" Value="0,3,0,0"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
         <Style Selector="Border.calendarEventChip TextBlock">
-            <Setter Property="Foreground" Value="#CC6B2A"/>
+            <Setter Property="Foreground" Value="#C9CED6"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         </Style>
         <Style Selector="TextBlock.calendarOverflow">
-            <Setter Property="Foreground" Value="#ABABB6"/>
+            <Setter Property="Foreground" Value="#7B818C"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="Margin" Value="2,3,0,0"/>
         </Style>
         <Style Selector="Border.calendarCard Border.message">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#ECECF1"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="BorderBrush" Value="#23262B"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="12"/>
         </Style>
         <Style Selector="Border.calendarCard TextBox">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#2B2B33"/>
-            <Setter Property="CaretBrush" Value="#2B2B33"/>
-            <Setter Property="SelectionBrush" Value="#FFE4CC"/>
-            <Setter Property="BorderBrush" Value="#E5DDD6"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Foreground" Value="#D7DAE0"/>
+            <Setter Property="CaretBrush" Value="#D7DAE0"/>
+            <Setter Property="SelectionBrush" Value="#3A3E46"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="10"/>
         </Style>
         <Style Selector="Border.calendarCard DatePicker, Border.calendarCard TimePicker">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#2B2B33"/>
-            <Setter Property="BorderBrush" Value="#E5DDD6"/>
-            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Foreground" Value="#D7DAE0"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
+            <Setter Property="CornerRadius" Value="4"/>
         </Style>
         <Style Selector="Border.calendarCard Button.primary">
-            <Setter Property="Background" Value="#3D2E24"/>
-            <Setter Property="Foreground" Value="#FFB347"/>
-            <Setter Property="BorderBrush" Value="#3D2E24"/>
-            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Background" Value="#2A2D33"/>
+            <Setter Property="Foreground" Value="#E6E9EE"/>
+            <Setter Property="BorderBrush" Value="#2A2D33"/>
+            <Setter Property="CornerRadius" Value="4"/>
         </Style>
         <Style Selector="Border.calendarCard Button.primary:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#4D3E34"/>
-            <Setter Property="TextBlock.Foreground" Value="#FFB347"/>
+            <Setter Property="Background" Value="#3A3E46"/>
+            <Setter Property="TextBlock.Foreground" Value="#E6E9EE"/>
         </Style>
     </Window.Styles>
 
-    <Grid Background="#1A1210">
-        <!-- Main layout: Title bar + rainbow stripe + content -->
+    <Grid Background="#0B0C0E">
+        <!-- Main layout: Title bar + hairline + content -->
         <Grid RowDefinitions="Auto,Auto,*">
 
             <!-- ═══ TITLE BAR (acts as window drag area) ═══ -->
             <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto" Height="48" Margin="8,0,8,0"
-                  IsHitTestVisible="True" Background="Transparent">
+                  IsHitTestVisible="True" Background="Transparent"
+                  PointerPressed="TitleBar_OnPointerPressed">
                 <!-- LEFT: Hamburger menu -->
-                <Button Grid.Column="0" Content="☰" Classes="icon" FontSize="16" Foreground="#FF8C42"
+                <Button Grid.Column="0" Content="☰" Classes="icon" FontSize="16" Foreground="#C9CED6"
                         VerticalAlignment="Center" Width="28" Height="28" Padding="0"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                     <Button.Flyout>
@@ -392,44 +393,41 @@
                 </Button>
 
                 <!-- Sidebar toggle (next to hamburger) -->
-                <Button Grid.Column="1" Content="◧" Classes="icon" FontSize="14" Foreground="#8C7568"
+                <Button Grid.Column="1" Content="◧" Classes="icon" FontSize="14" Foreground="#7B818C"
                         VerticalAlignment="Center" Width="28" Height="28" Padding="0" Margin="2,0,0,0"
                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                         Command="{Binding ToggleThreadsPanelCommand}"
                         ToolTip.Tip="Toggle sidebar"/>
 
-                <!-- CENTER: Rainbow CLIo logo -->
+                <!-- CENTER: silver CLIo wordmark -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="0">
-                    <TextBlock Text="C" Foreground="#CC6B4A" FontSize="17" FontWeight="Bold"/>
-                    <TextBlock Text="L" Foreground="#D4944A" FontSize="17" FontWeight="Bold"/>
-                    <TextBlock Text="I" Foreground="#C4A84D" FontSize="17" FontWeight="Bold"/>
-                    <TextBlock Text="o" Foreground="#6B9B6B" FontSize="17" FontWeight="Bold"/>
+                    <TextBlock Text="C" Foreground="#E6E9EE" FontSize="16" FontWeight="Bold"/>
+                    <TextBlock Text="L" Foreground="#C9CED6" FontSize="16" FontWeight="Bold"/>
+                    <TextBlock Text="I" Foreground="#AEB4BE" FontSize="16" FontWeight="Bold"/>
+                    <TextBlock Text="o" Foreground="#8F96A1" FontSize="16" FontWeight="Bold"/>
                 </StackPanel>
 
                 <!-- RIGHT: Window controls -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <Button Content="—" Classes="icon" FontSize="12" Foreground="#8C7568" Width="28" Height="28" Padding="0"
+                    <Button Content="—" Classes="icon" FontSize="12" Foreground="#7B818C" Width="28" Height="28" Padding="0"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                             Click="MinimizeButton_OnClick" ToolTip.Tip="Minimize"/>
-                    <Button Content="□" Classes="icon" FontSize="13" Foreground="#8C7568" Width="28" Height="28" Padding="0"
+                    <Button Content="□" Classes="icon" FontSize="13" Foreground="#7B818C" Width="28" Height="28" Padding="0"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                             Click="MaximizeButton_OnClick" ToolTip.Tip="Maximize"/>
-                    <Button Content="×" Classes="icon" FontSize="15" Foreground="#8C7568" Width="28" Height="28" Padding="0"
+                    <Button Content="×" Classes="icon" FontSize="15" Foreground="#7B818C" Width="28" Height="28" Padding="0"
                             HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
                             Click="CloseButton_OnClick" ToolTip.Tip="Close"/>
                 </StackPanel>
             </Grid>
 
-            <!-- ═══ RAINBOW STRIPE ═══ -->
-            <Border Grid.Row="1" Height="3" Margin="0,6,0,0">
+            <!-- ═══ HAIRLINE ═══ -->
+            <Border Grid.Row="1" Height="1" Margin="0,4,0,0">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                        <GradientStop Color="#CC6B4A" Offset="0"/>
-                        <GradientStop Color="#D4944A" Offset="0.2"/>
-                        <GradientStop Color="#C4A84D" Offset="0.4"/>
-                        <GradientStop Color="#6B9B6B" Offset="0.6"/>
-                        <GradientStop Color="#5B7EA3" Offset="0.8"/>
-                        <GradientStop Color="#8B6B9B" Offset="1"/>
+                        <GradientStop Color="#00C9CED6" Offset="0"/>
+                        <GradientStop Color="#99C9CED6" Offset="0.5"/>
+                        <GradientStop Color="#00C9CED6" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
             </Border>
@@ -455,7 +453,7 @@
                                             <Border Classes="message" Margin="0,0,0,10">
                                                 <StackPanel>
                                                     <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="0,0,0,8">
-                                                        <TextBlock Grid.Column="0" Text="{Binding DisplayRole}" Foreground="#FF8C42" FontWeight="Bold"/>
+                                                        <TextBlock Grid.Column="0" Text="{Binding DisplayRole}" Foreground="#C9CED6" FontWeight="Bold"/>
                                                         <TextBlock Grid.Column="1" Text="{Binding Timestamp, Converter={x:Static converters:HumanizeDateConverter.Instance}}" Classes="muted" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                                         <ItemsControl Grid.Column="2"
                                                                       ItemsSource="{Binding ActionBadges}"
@@ -571,7 +569,7 @@
                                              Padding="12,12,48,12"/>
                                     <Button Content="↵"
                                             Background="Transparent"
-                                            Foreground="#FF8C42"
+                                            Foreground="#C9CED6"
                                             FontSize="20"
                                             FontWeight="Bold"
                                             BorderThickness="0"
@@ -616,7 +614,7 @@
                                         <DataTemplate DataType="models:MemoryItem">
                                             <Border Classes="message" Margin="0,0,0,8">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding Key}" Foreground="#FF8C42" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding Key}" Foreground="#C9CED6" FontWeight="Bold"/>
                                                     <TextBlock Text="{Binding Value}" Classes="muted" TextWrapping="Wrap"/>
                                                 </StackPanel>
                                             </Border>
@@ -629,7 +627,7 @@
                                         <DataTemplate DataType="models:CalendarEvent">
                                             <Border Classes="message" Margin="0,0,0,8">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding Title}" Foreground="#FF8C42" FontWeight="Bold"/>
+                                                    <TextBlock Text="{Binding Title}" Foreground="#C9CED6" FontWeight="Bold"/>
                                                     <TextBlock Text="{Binding DisplayStartsAt}" Classes="muted"/>
                                                     <TextBlock Text="{Binding Details}" Classes="muted" TextWrapping="Wrap"/>
                                                 </StackPanel>
@@ -722,9 +720,9 @@
                                                 <DataTemplate DataType="models:CalendarEvent">
                                                     <Border Classes="message" Margin="0,0,0,8">
                                                         <StackPanel>
-                                                            <TextBlock Text="{Binding DisplayStartsAt}" Foreground="#CC6B2A" FontWeight="Bold"/>
+                                                            <TextBlock Text="{Binding DisplayStartsAt}" Foreground="#C9CED6" FontWeight="Bold"/>
                                                             <TextBlock Text="{Binding Title}" FontWeight="Bold" TextWrapping="Wrap"/>
-                                                            <TextBlock Text="{Binding Details}" Foreground="#9999A6" TextWrapping="Wrap"/>
+                                                            <TextBlock Text="{Binding Details}" Foreground="#7B818C" TextWrapping="Wrap"/>
                                                         </StackPanel>
                                                     </Border>
                                                 </DataTemplate>
@@ -775,7 +773,7 @@
                                                           Command="{Binding $parent[Window].DataContext.ToggleSelectedTaskCommand}"
                                                           CommandParameter="{Binding}"/>
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
-                                                    <TextBlock Text="{Binding Id, StringFormat='#{0}'}" Foreground="#8C7568" FontSize="11" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding Id, StringFormat='#{0}'}" Foreground="#7B818C" FontSize="11" VerticalAlignment="Center"/>
                                                     <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                                 </StackPanel>
                                                 <Button Grid.Column="2" Content="[ &#8594; CAL ]" Classes="ghost" Margin="8,0,0,0"
@@ -796,7 +794,7 @@
                 </Border>
 
                 <!-- ═══ OVERLAY DRAWER (left sidebar) ═══ -->
-                <Border Background="#231A15"
+                <Border Background="#121316"
                         Width="300"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Stretch"
@@ -821,7 +819,7 @@
                             <Grid IsVisible="{Binding IsChatView}" RowDefinitions="Auto,*,Auto" RowSpacing="10">
                                 <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Chats" Foreground="#FF8C42" FontWeight="Bold"/>
+                                        <TextBlock Text="Chats" Foreground="#C9CED6" FontWeight="Bold"/>
                                         <TextBlock Text="Main and scoped threads" Classes="muted" FontSize="12"/>
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="+" Classes="icon" Command="{Binding CreateChatThreadCommand}" VerticalAlignment="Center" Margin="0" FontSize="18"/>
@@ -831,7 +829,7 @@
                                     <ListBox.ItemTemplate>
                                         <DataTemplate DataType="models:ChatThread">
                                             <Grid ColumnDefinitions="*,Auto" MinHeight="34" Margin="2,0">
-                                                <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="#E8D5C4" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="#D7DAE0" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                                                 <Button Grid.Column="1" Content="..." Classes="icon" VerticalAlignment="Center">
                                                     <Button.Flyout>
                                                         <MenuFlyout>
@@ -868,7 +866,7 @@
                             <!-- Calendar navigation -->
                             <StackPanel IsVisible="{Binding IsCalendarView}" Spacing="10">
                                 <TextBlock Text="Period" Classes="label"/>
-                                <TextBlock Text="{Binding CalendarHeaderLabel}" Foreground="#FF8C42" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="{Binding CalendarHeaderLabel}" Foreground="#C9CED6" FontWeight="Bold" Margin="0,0,0,8"/>
                                 <Button Content="[ PREVIOUS ]" Classes="ghost" Command="{Binding PreviousCalendarPeriodCommand}" HorizontalAlignment="Stretch"/>
                                 <Button Content="[ TODAY ]" Classes="primary" Command="{Binding GoToCalendarTodayCommand}" HorizontalAlignment="Stretch"/>
                                 <Button Content="[ NEXT ]" Classes="ghost" Command="{Binding NextCalendarPeriodCommand}" HorizontalAlignment="Stretch"/>
@@ -882,7 +880,7 @@
         </Grid>
 
         <!-- ═══ SCHEDULE TASK MODAL ═══ -->
-        <Border IsVisible="{Binding IsScheduleTaskModalOpen}" Background="#CC1A1210">
+        <Border IsVisible="{Binding IsScheduleTaskModalOpen}" Background="#CC0B0C0E">
             <Border Classes="modal" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="18">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -912,7 +910,7 @@
         </Border>
 
         <!-- ═══ CHAT RENAME MODAL ═══ -->
-        <Border IsVisible="{Binding IsChatRenameOpen}" Background="#CC1A1210">
+        <Border IsVisible="{Binding IsChatRenameOpen}" Background="#CC0B0C0E">
             <Border Classes="modal" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="18">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -934,7 +932,7 @@
         </Border>
 
         <!-- ═══ SETTINGS MODAL ═══ -->
-        <Border IsVisible="{Binding IsSettingsOpen}" Background="#CC1A1210">
+        <Border IsVisible="{Binding IsSettingsOpen}" Background="#CC0B0C0E">
             <Border Classes="modal" Width="560" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="18">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -951,7 +949,7 @@
                         <TextBlock Text="Stored locally in CLIo settings and loaded when the app starts." Classes="muted" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="2" Text="{Binding SettingsStatus}" Foreground="#FF8C42" TextWrapping="Wrap"/>
+                    <TextBlock Grid.Row="2" Text="{Binding SettingsStatus}" Foreground="#C9CED6" TextWrapping="Wrap"/>
 
                     <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Content="[ CANCEL ]" Classes="ghost" Command="{Binding CloseSettingsCommand}"/>
@@ -974,16 +972,5 @@
             </StackPanel>
         </Border>
 
-        <!-- ═══ SCANLINE OVERLAY ═══ -->
-        <Canvas IsHitTestVisible="False" ZIndex="100">
-            <Canvas.Background>
-                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,1%">
-                    <GradientStop Color="#00000000" Offset="0"/>
-                    <GradientStop Color="#00000000" Offset="0.5"/>
-                    <GradientStop Color="#08FF8C42" Offset="0.5"/>
-                    <GradientStop Color="#08FF8C42" Offset="1"/>
-                </LinearGradientBrush>
-            </Canvas.Background>
-        </Canvas>
     </Grid>
 </Window>

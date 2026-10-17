@@ -14,28 +14,28 @@
         FontFamily="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"
         Title="CLIo">
 
-    <Border Background="#1A1210" BorderBrush="#FF8C42" BorderThickness="1" CornerRadius="16">
-        <Grid RowDefinitions="*,3">
+    <Border Background="#0B0C0E" BorderBrush="#C9CED6" BorderThickness="1" CornerRadius="6">
+        <Grid RowDefinitions="*,1">
             <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="14">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock Text="C" FontSize="42" FontWeight="Bold" Foreground="#CC6B4A"/>
-                    <TextBlock Text="L" FontSize="42" FontWeight="Bold" Foreground="#D4944A"/>
-                    <TextBlock Text="I" FontSize="42" FontWeight="Bold" Foreground="#C4A84D"/>
-                    <TextBlock Text="o" FontSize="42" FontWeight="Bold" Foreground="#6B9B6B"/>
-                    <TextBlock Text="_" FontSize="42" FontWeight="Bold" Foreground="#5B7EA3"/>
+                    <TextBlock Text="C" FontSize="42" FontWeight="Bold" Foreground="#E6E9EE"/>
+                    <TextBlock Text="L" FontSize="42" FontWeight="Bold" Foreground="#C9CED6"/>
+                    <TextBlock Text="I" FontSize="42" FontWeight="Bold" Foreground="#AEB4BE"/>
+                    <TextBlock Text="o" FontSize="42" FontWeight="Bold" Foreground="#8F96A1"/>
+                    <TextBlock Text="_" FontSize="42" FontWeight="Bold" Foreground="#737A85"/>
                 </StackPanel>
-                <TextBlock Text="warming up..." FontSize="13" Foreground="#8C7568"
+                <TextBlock Text="warming up..." FontSize="13" Foreground="#7B818C"
                            LetterSpacing="2" HorizontalAlignment="Center"/>
             </StackPanel>
-            <Border Grid.Row="1" CornerRadius="0,0,16,16">
+            <Border Grid.Row="1" CornerRadius="0,0,6,6">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0%,50%" EndPoint="100%,50%">
-                        <GradientStop Color="#CC6B4A" Offset="0"/>
-                        <GradientStop Color="#D4944A" Offset="0.2"/>
-                        <GradientStop Color="#C4A84D" Offset="0.4"/>
-                        <GradientStop Color="#6B9B6B" Offset="0.6"/>
-                        <GradientStop Color="#5B7EA3" Offset="0.8"/>
-                        <GradientStop Color="#8B6B9B" Offset="1"/>
+                        <GradientStop Color="#E6E9EE" Offset="0"/>
+                        <GradientStop Color="#C9CED6" Offset="0.2"/>
+                        <GradientStop Color="#AEB4BE" Offset="0.4"/>
+                        <GradientStop Color="#8F96A1" Offset="0.6"/>
+                        <GradientStop Color="#737A85" Offset="0.8"/>
+                        <GradientStop Color="#5A606A" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
             </Border>

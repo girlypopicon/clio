@@ -938,7 +938,7 @@ public partial class MainWindowViewModel : ViewModelBase
             assistant.Content = $"Removed task: {match.Title}";
             assistant.ActionBadges = new ObservableCollection<ActionBadge>(new[]
             {
-                MakeBadge("×", $"-task: {match.Title}", "#5C1E1E")
+                MakeBadge("×", $"-task: {match.Title}", "#4A2A2E")
             });
         }
     }
@@ -2339,19 +2339,19 @@ public partial class MainWindowViewModel : ViewModelBase
         // Stamp action badges onto the message card (assign whole collection to fire property notification)
         var badges = new List<ActionBadge>();
         if (addedCount > 0)
-            badges.Add(MakeBadge("📅", $"+{addedCount} cal", "#5C3D1E"));
+            badges.Add(MakeBadge("📅", $"+{addedCount} cal", "#30343B"));
         if (parsed.TaskCandidates.Count > 0)
-            badges.Add(MakeBadge("✦", $"+{parsed.TaskCandidates.Count} task", "#3D5C1E"));
+            badges.Add(MakeBadge("✦", $"+{parsed.TaskCandidates.Count} task", "#30343B"));
         if (completedCount > 0)
-            badges.Add(MakeBadge("✓", $"{completedCount} done", "#1E5C3D"));
+            badges.Add(MakeBadge("✓", $"{completedCount} done", "#30343B"));
         if (deletedCount > 0)
-            badges.Add(MakeBadge("×", $"-{deletedCount} cal", "#5C1E1E"));
+            badges.Add(MakeBadge("×", $"-{deletedCount} cal", "#4A2A2E"));
         if (movedCount > 0)
-            badges.Add(MakeBadge("↗", $"moved {movedCount}", "#1E3D5C"));
+            badges.Add(MakeBadge("↗", $"moved {movedCount}", "#30343B"));
         if (editedCount > 0)
-            badges.Add(MakeBadge("~", $"edited {editedCount}", "#5C4D1E"));
+            badges.Add(MakeBadge("~", $"edited {editedCount}", "#30343B"));
         if (parsed.MemoryCandidates.Count > 0 && !isExplicitDelete)
-            badges.Add(MakeBadge("🧠", "memory noted", "#3D1E5C"));
+            badges.Add(MakeBadge("🧠", "memory noted", "#30343B"));
 
         if (parsed.DevNoteCandidates.Count > 0)
         {
@@ -2360,7 +2360,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 await database.AddDevNoteAsync(note, "llm");
                 devLog.Log($"LLM dev note: {note}", "notes");
             }
-            badges.Add(MakeBadge("📋", $"+{parsed.DevNoteCandidates.Count} dev note", "#5C3D1E"));
+            badges.Add(MakeBadge("📋", $"+{parsed.DevNoteCandidates.Count} dev note", "#30343B"));
         }
 
         if (badges.Count > 0)
