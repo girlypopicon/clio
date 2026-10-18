@@ -34,7 +34,8 @@ public sealed record UpdateInfo(
     string Tag,
     Version? Latest,
     string Url,
-    string Notes);
+    string Notes,
+    IReadOnlyList<CLIo.Services.Update.ReleaseAsset>? Assets = null);
 
 /// <summary>
 /// Looks at the repo's latest published GitHub release and says whether it is newer than this build.
@@ -48,11 +49,15 @@ public sealed class UpdateService
     private static readonly TimeSpan CacheFor = TimeSpan.FromHours(1);
 
     private readonly HttpClient http = new() { Timeout = TimeSpan.FromSeconds(10) };
+    private readonly string apiBase;
     private UpdateInfo? cached;
     private DateTimeOffset cachedAt;
 
-    public UpdateService()
+    /// <param name="apiBase">Only for tests: a stand-in for api.github.com. The CLIO_UPDATE_FEED environment variable does the same.
+    /// It cannot weaken anything that matters: an installer still refuses releases whose signature does not verify.</param>
+    public UpdateService(string? apiBase = null)
     {
+        this.apiBase = (apiBase ?? Environment.GetEnvironmentVariable("CLIO_UPDATE_FEED") ?? "https://api.github.com").TrimEnd('/');
         http.DefaultRequestHeaders.UserAgent.ParseAdd($"CLIo/{AppVersion.Text}");
         http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
     }
@@ -66,7 +71,7 @@ public sealed class UpdateService
 
         try
         {
-            using var response = await http.GetAsync($"https://api.github.com/repos/{Repo}/releases/latest", cancellationToken);
+            using var response = await http.GetAsync($"{apiBase}/repos/{Repo}/releases/latest", cancellationToken);
             UpdateInfo result;
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -123,9 +128,24 @@ public sealed class UpdateService
                 return new UpdateInfo(false, $"The latest release tag \"{tag}\" is not a version number.", false, false, tag, null, url, notes);
             }
 
+            var assets = new List<CLIo.Services.Update.ReleaseAsset>();
+            if (root.TryGetProperty("assets", out var assetArray) && assetArray.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var a in assetArray.EnumerateArray())
+                {
+                    var name = a.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "";
+                    var link = a.TryGetProperty("browser_download_url", out var l) ? l.GetString() ?? "" : "";
+                    var size = a.TryGetProperty("size", out var sz) && sz.TryGetInt64(out var bytes) ? bytes : 0;
+                    if (name.Length > 0 && link.Length > 0)
+                    {
+                        assets.Add(new CLIo.Services.Update.ReleaseAsset(name, link, size));
+                    }
+                }
+            }
+
             var latest = AppVersion.Normalize(parsed);
             var newer = latest > AppVersion.Normalize(current);
-            return new UpdateInfo(true, newer ? $"Version {latest} is available." : "CLIo is up to date.", false, newer, tag, latest, url, notes);
+            return new UpdateInfo(true, newer ? $"Version {latest} is available." : "CLIo is up to date.", false, newer, tag, latest, url, notes, assets);
         }
         catch (JsonException)
         {
@@ -161,6 +181,6 @@ public sealed class UpdateService
 
         var notes = string.IsNullOrWhiteSpace(info.Notes) ? string.Empty : $"\nWhat's new: {info.Notes.Trim()}";
         return $"Version {info.Latest} is available (this is {current}).{notes}\nRelease page: {info.Url}\n" +
-               "I can't download or install updates myself. Open the page and run the installer when you're ready; CLIo should be closed first.";
+               "To install it, ask me to install the update (you will be shown exactly what happens and asked to approve), or press Install in the banner. If CLIo is run from source, pull the code and rebuild instead.";
     }
 }

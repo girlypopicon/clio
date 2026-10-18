@@ -4,12 +4,13 @@ using System.Text.RegularExpressions;
 using CLIo.Models;
 using CLIo.Services;
 using CLIo.Services.Skills;
+using CLIo.Services.Update;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CLIo.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
 {
     private static readonly HashSet<string> ValidCategories = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -53,9 +54,17 @@ public partial class MainWindowViewModel : ViewModelBase
         VoiceModelDownloader voiceDownloader,
         SkillRegistry skillRegistry,
         AgentCatalog agentCatalog,
-        UpdateService updateService)
+        UpdateService updateService,
+        UpdateInstaller updateInstaller)
     {
         this.updateService = updateService;
+        this.updateInstaller = updateInstaller;
+        skillRegistry.Approvals = this;
+        updateInstaller.Progress += text => Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            UpdateBannerText = text;
+            IsUpdateBannerVisible = true;
+        });
         this.skillRegistry = skillRegistry;
         this.agentCatalog = agentCatalog;
         this.voiceDownloader = voiceDownloader;
@@ -159,6 +168,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly SkillRegistry skillRegistry;
     private readonly AgentCatalog agentCatalog;
     private readonly UpdateService updateService;
+    private readonly UpdateInstaller updateInstaller;
     private string? turnAgentPrompt;
 
     [ObservableProperty]
@@ -1015,13 +1025,81 @@ public partial class MainWindowViewModel : ViewModelBase
         await LoadReviewAsync();
     }
 
-    // ---- update notice (looks only; never downloads or installs) -----------------------------
+    // ---- approval for skills that act in the world ---------------------------------------------
+
+    [ObservableProperty]
+    private bool isApprovalOpen;
+
+    [ObservableProperty]
+    private string approvalTitle = string.Empty;
+
+    [ObservableProperty]
+    private string approvalPreview = string.Empty;
+
+    private TaskCompletionSource<bool>? approvalSource;
+
+    public Task<bool> RequestAsync(string title, string preview, CancellationToken cancellationToken)
+    {
+        var source = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        cancellationToken.Register(() => source.TrySetResult(false));
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            approvalSource?.TrySetResult(false);
+            approvalSource = source;
+            ApprovalTitle = title switch
+            {
+                "install_update" => "Install the update?",
+                _ => $"Allow CLIo to run {title}?"
+            };
+            ApprovalPreview = preview;
+            IsApprovalOpen = true;
+        });
+        return source.Task;
+    }
+
+    [RelayCommand]
+    private void ApproveAction()
+    {
+        IsApprovalOpen = false;
+        approvalSource?.TrySetResult(true);
+    }
+
+    [RelayCommand]
+    private void DeclineAction()
+    {
+        IsApprovalOpen = false;
+        approvalSource?.TrySetResult(false);
+    }
+
+    // ---- update notice ------------------------------------------------------------------------
 
     [ObservableProperty]
     private bool isUpdateBannerVisible;
 
     [ObservableProperty]
     private string updateBannerText = string.Empty;
+
+    [ObservableProperty]
+    private bool canInstallUpdate;
+
+    /// <summary>The banner's Install button asks for the same approved install the chat skill does.</summary>
+    [RelayCommand]
+    private async Task InstallUpdateAsync()
+    {
+        CanInstallUpdate = false;
+        var text = await skillRegistry.RunAsync([new SkillCall("install_update", "latest")]);
+        CanInstallUpdate = updateInstaller.GetLayout().CanSelfUpdate;
+        var note = new ChatMessage
+        {
+            Role = "assistant",
+            Content = text.Contains("declined", StringComparison.OrdinalIgnoreCase)
+                ? "Okay, I won't install the update. Nothing was changed."
+                : text.Replace("SKILL RESULTS. Use them to answer the user's last message.", string.Empty).Replace("<<<DATA", string.Empty).Replace("DATA>>>", string.Empty).Trim(),
+            Timestamp = DateTimeOffset.Now
+        };
+        ChatMessages.Add(note);
+        await database.AddChatMessageAsync(SelectedThreadId, note.Role, note.Content, note.Timestamp);
+    }
 
     private string updateUrl = string.Empty;
     private string updateTag = string.Empty;
@@ -1073,6 +1151,7 @@ public partial class MainWindowViewModel : ViewModelBase
             updateTag = tag;
             updateUrl = url;
             UpdateBannerText = $"CLIo {tag.TrimStart('v', 'V')} is available. You're on {AppVersion.Text}.";
+            CanInstallUpdate = updateInstaller.GetLayout().CanSelfUpdate;
             IsUpdateBannerVisible = true;
         }
         else
@@ -2375,6 +2454,14 @@ public partial class MainWindowViewModel : ViewModelBase
                 : null;
 
         keyCanonicalizer.LoadAliases(await database.GetSettingAsync("memory_key_aliases"));
+        if (updateInstaller.ReadAndClearResult() is { } updateResult)
+        {
+            var text = updateResult.Ok
+                ? $"CLIo was updated to version {AppVersion.Text}."
+                : $"The update to {updateResult.Version} did not finish: {updateResult.Message} You're on version {AppVersion.Text}.";
+            await database.AddChatMessageAsync(1, "assistant", text, DateTimeOffset.Now);
+        }
+
         await LoadReviewAsync();
         PolishDictation = await database.GetSettingAsync("voice_polish", "1") != "0";
         VoiceCorrectionsText = await database.GetSettingAsync("voice_corrections");

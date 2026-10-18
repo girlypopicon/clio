@@ -37,6 +37,25 @@ public interface ISkill
     string DescribeRun(string input);
 
     Task<SkillResult> RunAsync(string input, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Dry run, required in practice for <see cref="SkillPermission.Acts"/> skills: describe exactly what
+    /// <see cref="RunAsync"/> would do, without doing any of it. The text is shown to the user, who must
+    /// approve before RunAsync is called. Throw <see cref="SkillBlockedException"/> when there is nothing
+    /// sensible to approve (the message is passed on instead).
+    /// </summary>
+    Task<string> PreviewAsync(string input, CancellationToken cancellationToken) =>
+        Task.FromResult($"Run {Name} with: {input}");
+}
+
+/// <summary>Thrown by PreviewAsync when the action cannot go ahead; the message explains why.</summary>
+public sealed class SkillBlockedException(string message) : Exception(message);
+
+/// <summary>Asks the user to approve an action. Implemented by the UI.</summary>
+public interface IApprovalProvider
+{
+    /// <returns>True only if the user explicitly approved.</returns>
+    Task<bool> RequestAsync(string title, string preview, CancellationToken cancellationToken);
 }
 
 public enum SkillPermission

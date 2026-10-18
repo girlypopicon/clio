@@ -93,9 +93,12 @@ public partial class App : Application
 
     private void OpenMenuItem_OnClick(object? sender, EventArgs e) => ShowMainWindow();
 
-    private void QuitMenuItem_OnClick(object? sender, EventArgs e)
+    private void QuitMenuItem_OnClick(object? sender, EventArgs e) => Quit();
+
+    /// <summary>Really exits the app (used by Quit in the tray menu and by the updater).</summary>
+    public static void Quit()
     {
         IsQuitting = true;
-        (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
+        (Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
     }
 }

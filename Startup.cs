@@ -37,6 +37,8 @@ public static class Startup
         services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.SelfDocsSkill>();
         services.AddSingleton<UpdateService>();
         services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.UpdateSkill>();
+        services.AddSingleton<CLIo.Services.Update.UpdateInstaller>();
+        services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.InstallUpdateSkill>();
         services.AddSingleton<CLIo.Services.Skills.SkillRegistry>();
         services.AddSingleton<CLIo.Services.Skills.AgentCatalog>();
 

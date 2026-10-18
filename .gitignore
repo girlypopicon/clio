@@ -12,3 +12,6 @@ dist/
 node_modules/
 .wrangler/
 .dev.vars
+
+# Release build output
+artifacts/

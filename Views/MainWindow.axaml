@@ -447,10 +447,11 @@
             <!-- ═══ UPDATE BANNER (only appears when a newer release exists) ═══ -->
             <Border Grid.Row="2" IsVisible="{Binding IsUpdateBannerVisible}" Margin="16,10,16,0" Padding="14,8"
                     Background="#2E323A" BorderBrush="#434956" BorderThickness="1" CornerRadius="10">
-                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
                     <TextBlock Grid.Column="0" Text="{Binding UpdateBannerText}" VerticalAlignment="Center" Foreground="#E6E9EE"/>
-                    <Button Grid.Column="1" Content="VIEW RELEASE" Classes="primary" Command="{Binding OpenUpdatePageCommand}"/>
-                    <Button Grid.Column="2" Content="LATER" Classes="ghost" Command="{Binding DismissUpdateCommand}"/>
+                    <Button Grid.Column="1" Content="INSTALL" Classes="primary" IsVisible="{Binding CanInstallUpdate}" Command="{Binding InstallUpdateCommand}"/>
+                    <Button Grid.Column="2" Content="VIEW RELEASE" Classes="ghost" Command="{Binding OpenUpdatePageCommand}"/>
+                    <Button Grid.Column="3" Content="LATER" Classes="ghost" Command="{Binding DismissUpdateCommand}"/>
                 </Grid>
             </Border>
 
@@ -918,6 +919,25 @@
                 </Border>
             </Grid>
         </Grid>
+
+        <!-- ═══ APPROVAL MODAL (skills that act in the world) ═══ -->
+        <Border IsVisible="{Binding IsApprovalOpen}" Background="#CC1B1D22">
+            <Border Classes="modal" Width="560" MaxHeight="640" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14">
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Classes="eyebrow" Text="// APPROVAL NEEDED"/>
+                        <TextBlock Text="{Binding ApprovalTitle}" Classes="title"/>
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <TextBlock Text="{Binding ApprovalPreview}" TextWrapping="Wrap" Foreground="#D7DAE0"/>
+                    </ScrollViewer>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button Content="CANCEL" Classes="ghost" Command="{Binding DeclineActionCommand}"/>
+                        <Button Content="APPROVE" Classes="primary" Command="{Binding ApproveActionCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
 
         <!-- ═══ DAY MODAL ═══ -->
         <Border IsVisible="{Binding IsDayModalOpen}" Background="#CC1B1D22">
