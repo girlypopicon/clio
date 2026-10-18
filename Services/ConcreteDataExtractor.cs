@@ -70,6 +70,7 @@ public sealed class ConcreteDataExtractor
         };
 
         var sb = new StringBuilder();
+        using var purpose = LlmCall.Use("extract");
         try
         {
             await foreach (var token in llm.ChatAsync(messages))

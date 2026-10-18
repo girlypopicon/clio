@@ -86,6 +86,7 @@ public sealed class SystemPromptBuilder
             "Persona agents: start a message with @Name (for example @Database-Architect); __agents lists them",
             "Voice: Whisper via a Cloudflare Worker with local fallback, hallucination filter, Piper speech; database now truly encrypted with SQLCipher",
             "Calendar redesign: same-size dates in every view, a day modal for editing; chat always scrolls to the newest message",
+            "Runtime log: structured record of what the app actually did (LLM calls with tokens, filing, skills, errors), queryable by CLIo via query_runtime_log and by you with __events",
             "Self-update: a daily check for newer releases with a banner; installing is an approval-gated action (preview, signed release, checksum, database backup, automatic rollback) via the install_update skill or the banner's Install button",
         ]),
         new("v0.2.3", "2026-06-28",

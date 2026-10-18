@@ -5,21 +5,40 @@ namespace CLIo.Services;
 public sealed class TaskService : ITaskService
 {
     private readonly JournalDatabaseService database;
+    private readonly RuntimeLog? runtimeLog;
 
-    public TaskService(JournalDatabaseService database)
+    public TaskService(JournalDatabaseService database, RuntimeLog? runtimeLog = null)
     {
         this.database = database;
+        this.runtimeLog = runtimeLog;
     }
 
     public Task<IReadOnlyList<JournalTask>> GetAllAsync() => database.GetTasksAsync();
 
-    public Task AddAsync(string title, string source = "chat") => database.AddTaskAsync(title, source);
+    public async Task AddAsync(string title, string source = "chat")
+    {
+        await database.AddTaskAsync(title, source);
+        runtimeLog?.Record("tasks", "add", "ok", $"\"{title}\" [{source}]");
+    }
 
-    public Task DeleteAsync(int id) => database.DeleteTaskAsync(id);
+    public async Task DeleteAsync(int id)
+    {
+        await database.DeleteTaskAsync(id);
+        runtimeLog?.Record("tasks", "delete", "ok", $"task #{id}");
+    }
 
-    public Task SetDoneAsync(int id, bool isDone) => database.SetTaskDoneAsync(id, isDone);
+    public async Task SetDoneAsync(int id, bool isDone)
+    {
+        await database.SetTaskDoneAsync(id, isDone);
+        runtimeLog?.Record("tasks", isDone ? "done" : "reopen", "ok", $"task #{id}");
+    }
 
-    public Task<bool> CompleteByTitleAsync(string title) => database.CompleteTaskByTitleAsync(title);
+    public async Task<bool> CompleteByTitleAsync(string title)
+    {
+        var completed = await database.CompleteTaskByTitleAsync(title);
+        runtimeLog?.Record("tasks", "done", completed ? "ok" : "not_found", $"\"{title}\"");
+        return completed;
+    }
 
     public Task<JournalTask?> FindOpenTaskByText(string text, IReadOnlyList<JournalTask> tasks)
     {

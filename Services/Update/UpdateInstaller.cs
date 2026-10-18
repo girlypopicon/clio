@@ -47,9 +47,11 @@ public sealed class UpdateInstaller
     private readonly UpdateService updates;
     private readonly DevLogService devLog;
     private readonly UpdateInstallerOptions options;
+    private readonly RuntimeLog? runtimeLog;
 
-    public UpdateInstaller(UpdateService updates, DevLogService devLog, UpdateInstallerOptions? options = null)
+    public UpdateInstaller(UpdateService updates, DevLogService devLog, UpdateInstallerOptions? options = null, RuntimeLog? runtimeLog = null)
     {
+        this.runtimeLog = runtimeLog;
         this.updates = updates;
         this.devLog = devLog;
         this.options = options ?? new UpdateInstallerOptions();
@@ -146,6 +148,7 @@ public sealed class UpdateInstaller
         if (!UpdateTrust.Verify(manifestBytes, signatureBytes, options.PublicKeyBase64))
         {
             devLog.Log("Update rejected: manifest signature did not verify.", "update");
+            runtimeLog?.Record("update", "reject", "blocked", "manifest signature did not verify against the built-in key");
             return Fail("The release's signature does not verify against my built-in key, so I won't install it. Nothing was changed.");
         }
 
@@ -200,6 +203,22 @@ public sealed class UpdateInstaller
     // ---- stage (downloads and checks, still changes nothing that is installed) -----------------
 
     public async Task<string> StageAsync(UpdatePlan plan, CancellationToken cancellationToken = default)
+    {
+        var timer = runtimeLog?.Start("update", "stage");
+        try
+        {
+            var staging = await StageCoreAsync(plan, cancellationToken);
+            timer?.Done("ok", $"CLIo {plan.Manifest!.Version} downloaded, verified and unpacked");
+            return staging;
+        }
+        catch (Exception ex)
+        {
+            timer?.Done("error", ex.Message);
+            throw;
+        }
+    }
+
+    private async Task<string> StageCoreAsync(UpdatePlan plan, CancellationToken cancellationToken)
     {
         var manifest = plan.Manifest ?? throw new InvalidOperationException("No plan.");
         var root = Path.Combine(options.DataDir, "updates", manifest.Version);
@@ -369,6 +388,7 @@ public sealed class UpdateInstaller
 
         Process.Start(psi);
         devLog.Log($"Update to {manifest.Version} handed to the swap script; closing CLIo.", "update");
+        runtimeLog?.Record("update", "apply", "ok", $"handed {manifest.Version} to the swap script; CLIo is closing");
         Report($"Installing CLIo {manifest.Version}: closing CLIo...");
         (options.Quit ?? App.Quit)();
     }

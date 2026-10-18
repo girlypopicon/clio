@@ -28,6 +28,7 @@ public static class Startup
         // CLIo self-state
         services.AddSingleton<ClioStateService>();
         services.AddSingleton<DevLogService>();
+        services.AddSingleton<RuntimeLog>();
 
         services.AddSingleton<WebSearchService>();
 
@@ -35,6 +36,7 @@ public static class Startup
         services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.WebSearchSkill>();
         services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.BrowseSkill>();
         services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.SelfDocsSkill>();
+        services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.QueryRuntimeLogSkill>();
         services.AddSingleton<UpdateService>();
         services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.UpdateSkill>();
         services.AddSingleton<CLIo.Services.Update.UpdateInstaller>();

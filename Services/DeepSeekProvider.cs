@@ -29,6 +29,7 @@ public sealed class DeepSeekProvider : ILLMProvider
         {
             model = Environment.GetEnvironmentVariable("DEEPSEEK_MODEL") ?? "deepseek-chat",
             stream = true,
+            stream_options = new { include_usage = true },
             messages = messages.Select(message => new
             {
                 role = message.Role,
@@ -62,11 +63,38 @@ public sealed class DeepSeekProvider : ILLMProvider
                 yield break;
             }
 
+            ReadUsage(data);
+
             var token = ReadToken(data);
             if (!string.IsNullOrEmpty(token))
             {
                 yield return token;
             }
+        }
+    }
+
+    /// <summary>The last streamed chunk carries token counts; hand them to whoever is recording this call.</summary>
+    private static void ReadUsage(string json)
+    {
+        var stats = LlmCall.Stats.Value;
+        if (stats is null || !json.Contains("\"usage\"", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.TryGetProperty("usage", out var usage) && usage.ValueKind == JsonValueKind.Object)
+            {
+                stats.PromptTokens = usage.TryGetProperty("prompt_tokens", out var p) && p.TryGetInt32(out var pi) ? pi : stats.PromptTokens;
+                stats.CompletionTokens = usage.TryGetProperty("completion_tokens", out var c) && c.TryGetInt32(out var ci) ? ci : stats.CompletionTokens;
+                stats.CacheHitTokens = usage.TryGetProperty("prompt_cache_hit_tokens", out var h) && h.TryGetInt32(out var hi) ? hi : stats.CacheHitTokens;
+            }
+        }
+        catch (JsonException)
+        {
+            // usage is a bonus; never break the stream over it
         }
     }
 

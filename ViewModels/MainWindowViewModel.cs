@@ -55,8 +55,10 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         SkillRegistry skillRegistry,
         AgentCatalog agentCatalog,
         UpdateService updateService,
-        UpdateInstaller updateInstaller)
+        UpdateInstaller updateInstaller,
+        RuntimeLog runtimeLog)
     {
+        this.runtimeLog = runtimeLog;
         this.updateService = updateService;
         this.updateInstaller = updateInstaller;
         skillRegistry.Approvals = this;
@@ -169,6 +171,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
     private readonly AgentCatalog agentCatalog;
     private readonly UpdateService updateService;
     private readonly UpdateInstaller updateInstaller;
+    private readonly RuntimeLog runtimeLog;
     private string? turnAgentPrompt;
 
     [ObservableProperty]
@@ -404,6 +407,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             var messages = new List<LlmMessage> { new("system", system, now), new("user", raw, now) };
 
             var sb = new StringBuilder();
+            using var purpose = LlmCall.Use("polish");
             await foreach (var token in llmProvider.ChatAsync(messages, cts.Token))
             {
                 sb.Append(token);
@@ -1009,6 +1013,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         }
 
         await database.ResolveReviewItemAsync(item.Id, "accepted");
+        runtimeLog.Record("review", "accepted", "ok", $"{item.Kind}: {item.Label}");
         await LoadReviewAsync();
     }
 
@@ -1022,6 +1027,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         }
 
         await database.ResolveReviewItemAsync(item.Id, "dismissed");
+        runtimeLog.Record("review", "dismissed", "ok", $"{item.Kind}: {item.Label}");
         await LoadReviewAsync();
     }
 
@@ -1678,9 +1684,12 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
 
         var llmMessages = BuildPrefixLlmMessages(prefix, body, now);
 
-        await foreach (var token in llmProvider.ChatAsync(llmMessages))
+        using (LlmCall.Use("command"))
         {
-            assistant.Content += token;
+            await foreach (var token in llmProvider.ChatAsync(llmMessages))
+            {
+                assistant.Content += token;
+            }
         }
 
         await LogLlmExchangeAsync(llmMessages, assistant.Content);
@@ -1966,6 +1975,20 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             var listing = new ChatMessage { Role = "assistant", Content = UpdateService.Describe(info), Timestamp = DateTimeOffset.Now };
             ChatMessages.Add(listing);
             await database.AddChatMessageAsync(SelectedThreadId, listing.Role, listing.Content, listing.Timestamp);
+            return;
+        }
+
+        if (normalized is "events" || normalized.StartsWith("events "))
+        {
+            var filters = body.Length > 6 ? body[6..].Trim() : string.Empty;
+            var report = new ChatMessage
+            {
+                Role = "assistant",
+                Content = await QueryRuntimeLogSkill.BuildReportAsync(runtimeLog, filters),
+                Timestamp = DateTimeOffset.Now
+            };
+            ChatMessages.Add(report);
+            await database.AddChatMessageAsync(SelectedThreadId, report.Role, report.Content, report.Timestamp);
             return;
         }
 
@@ -2509,6 +2532,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         await MaybeTrimChatHistoryAsync();
         await clioState.RecordStartupAsync(SystemPromptBuilder.Version);
         devLog.Log($"CLIo v{SystemPromptBuilder.Version} started, session #{await clioState.GetAsync("session_count")}", "startup");
+        runtimeLog.Record("app", "start", "ok", $"CLIo v{SystemPromptBuilder.Version}, session #{await clioState.GetAsync("session_count")}");
         _ = RunUpdateLoopAsync();
     }
 
@@ -2758,7 +2782,11 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             conversation.Add(new LlmMessage("assistant", reply, DateTimeOffset.Now));
             conversation.Add(new LlmMessage("user", results, DateTimeOffset.Now));
 
-            reply = await StreamReplyAsync(conversation, assistant);
+            using (LlmCall.Use("chat+skill"))
+            {
+                reply = await StreamReplyAsync(conversation, assistant);
+            }
+
             await LogLlmExchangeAsync(conversation, reply);
         }
 
@@ -3211,12 +3239,14 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             return;
         }
 
+        var pass = runtimeLog.Start("extract", "pass");
         try
         {
             dataExtractor ??= new ConcreteDataExtractor(llmProvider, devLog);
             var result = await dataExtractor.ExtractAsync(text, now, MemoryItems.ToList());
             if (result.IsEmpty)
             {
+                pass.Done("empty", "nothing concrete found in the message");
                 return;
             }
 
@@ -3346,10 +3376,12 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             }
 
             devLog.Log($"Auto-extract: {savedMemory} memory, {addedTasks} tasks, {addedEvents} events", "extract");
+            pass.Done("ok", $"found {result.Memory.Count} memory, {result.Tasks.Count} tasks, {result.Events.Count} events, {result.DevNotes.Count} dev notes; filed {savedMemory} memory, {addedTasks} tasks, {addedEvents} events, {addedDevNotes} dev notes, {queuedForReview} events sent to review");
         }
         catch (Exception ex)
         {
             devLog.Log($"Auto-extract failed: {ex.Message}", "extract");
+            pass.Done("error", ex.Message);
         }
     }
 
@@ -4299,15 +4331,21 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             validation.Error,
             candidate.Type);
 
+        var origin = source.Split(':')[0];
+        var shown = candidate.Value.Length > 60 ? candidate.Value[..59] + "…" : candidate.Value;
+
         if (validation.Status == "pending_review")
         {
             var current = await database.GetMemoryValueAsync(candidate.Key) ?? string.Empty;
-            await database.AddReviewItemAsync("memory", candidate.Key, candidate.Key, current, candidate.Value, source.Split(':')[0]);
+            await database.AddReviewItemAsync("memory", candidate.Key, candidate.Key, current, candidate.Value, origin);
+            runtimeLog.Record("review", "queued", "queued", $"memory {candidate.Key}: kept \"{current}\", chat said \"{shown}\" [{origin}]");
             return validation with { Status = "queued_review" };
         }
 
         if (!validation.ShouldWrite)
         {
+            runtimeLog.Record("memory", "write", validation.Status == "success" ? "unchanged" : "rejected",
+                $"{candidate.Key} = \"{shown}\" [{origin}]{(validation.Error.Length > 0 ? " - " + validation.Error : string.Empty)}");
             return validation;
         }
 
@@ -4315,10 +4353,12 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         {
             await database.UpsertMemoryAsync(candidate.Key, candidate.Value, candidate.Type);
             await database.UpdateMemoryTransactionStatusAsync(transactionId, "success");
+            runtimeLog.Record("memory", "write", "ok", $"{candidate.Key} = \"{shown}\" [{origin}]");
         }
         catch (Exception ex)
         {
             await database.UpdateMemoryTransactionStatusAsync(transactionId, "failed", ex.Message);
+            runtimeLog.Record("memory", "write", "error", $"{candidate.Key}: {ex.Message}");
         }
 
         return validation;

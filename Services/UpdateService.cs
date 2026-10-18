@@ -50,13 +50,15 @@ public sealed class UpdateService
 
     private readonly HttpClient http = new() { Timeout = TimeSpan.FromSeconds(10) };
     private readonly string apiBase;
+    private readonly RuntimeLog? runtimeLog;
     private UpdateInfo? cached;
     private DateTimeOffset cachedAt;
 
     /// <param name="apiBase">Only for tests: a stand-in for api.github.com. The CLIO_UPDATE_FEED environment variable does the same.
     /// It cannot weaken anything that matters: an installer still refuses releases whose signature does not verify.</param>
-    public UpdateService(string? apiBase = null)
+    public UpdateService(string? apiBase = null, RuntimeLog? runtimeLog = null)
     {
+        this.runtimeLog = runtimeLog;
         this.apiBase = (apiBase ?? Environment.GetEnvironmentVariable("CLIO_UPDATE_FEED") ?? "https://api.github.com").TrimEnd('/');
         http.DefaultRequestHeaders.UserAgent.ParseAdd($"CLIo/{AppVersion.Text}");
         http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
@@ -69,6 +71,7 @@ public sealed class UpdateService
             return cached;
         }
 
+        var timer = runtimeLog?.Start("update", "check");
         try
         {
             using var response = await http.GetAsync($"{apiBase}/repos/{Repo}/releases/latest", cancellationToken);
@@ -79,6 +82,7 @@ public sealed class UpdateService
             }
             else if (!response.IsSuccessStatusCode)
             {
+                timer?.Done("error", $"GitHub answered {(int)response.StatusCode}");
                 return new UpdateInfo(false, $"GitHub answered {(int)response.StatusCode}; try again later.", false, false, "", null, "", "");
             }
             else
@@ -88,10 +92,12 @@ public sealed class UpdateService
 
             cached = result;
             cachedAt = DateTimeOffset.Now;
+            timer?.Done("ok", result.NoReleases ? "no releases published" : result.IsNewer ? $"newer release {result.Tag} available" : $"up to date (latest {result.Tag})");
             return result;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
+            timer?.Done("error", "could not reach GitHub");
             return new UpdateInfo(false, "Couldn't reach GitHub to check for updates.", false, false, "", null, "", "");
         }
     }

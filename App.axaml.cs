@@ -29,10 +29,25 @@ public partial class App : Application
     {
         Services = Startup.ConfigureServices();
 
+        // Anything that kills the app or escapes a background task is written to the runtime log.
+        var runtimeLog = Services.GetRequiredService<RuntimeLog>();
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            runtimeLog.Record("app", "unhandled_exception", "error", e.ExceptionObject.ToString() ?? "unknown");
+            runtimeLog.FlushAsync().Wait(2000);
+        };
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, e) =>
+            runtimeLog.Record("app", "unobserved_task_exception", "error", e.Exception.ToString());
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Keep running in the tray after the main window is closed; Quit calls Shutdown explicitly.
             desktop.ShutdownMode = Avalonia.Controls.ShutdownMode.OnExplicitShutdown;
+            desktop.Exit += (_, _) =>
+            {
+                runtimeLog.Record("app", "exit", "ok", "CLIo is closing");
+                runtimeLog.FlushAsync().Wait(2000);
+            };
 
             var splash = new SplashWindow();
             desktop.MainWindow = splash;

@@ -1172,6 +1172,177 @@ public sealed class JournalDatabaseService
         });
     }
 
+    // ---- runtime event log ---------------------------------------------------------------------
+
+    public Task AddRuntimeEventsAsync(IReadOnlyList<RuntimeEvent> events, int keep)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var transaction = connection.BeginTransaction();
+            foreach (var e in events)
+            {
+                using var insert = connection.CreateCommand();
+                insert.Transaction = transaction;
+                insert.CommandText = """
+                    INSERT INTO runtime_events(ts, component, type, outcome, latency_ms, model, tokens_in, tokens_out, detail)
+                    VALUES ($ts, $component, $type, $outcome, $latency, $model, $tin, $tout, $detail)
+                    """;
+                insert.Parameters.AddWithValue("$ts", e.Time.UtcDateTime.ToString("O"));
+                insert.Parameters.AddWithValue("$component", e.Component);
+                insert.Parameters.AddWithValue("$type", e.Type);
+                insert.Parameters.AddWithValue("$outcome", e.Outcome);
+                insert.Parameters.AddWithValue("$latency", (object?)e.LatencyMs ?? DBNull.Value);
+                insert.Parameters.AddWithValue("$model", (object?)e.Model ?? DBNull.Value);
+                insert.Parameters.AddWithValue("$tin", (object?)e.TokensIn ?? DBNull.Value);
+                insert.Parameters.AddWithValue("$tout", (object?)e.TokensOut ?? DBNull.Value);
+                insert.Parameters.AddWithValue("$detail", e.Detail);
+                insert.ExecuteNonQuery();
+            }
+
+            // keep only the newest rows so the log stays small and fast
+            using var trim = connection.CreateCommand();
+            trim.Transaction = transaction;
+            trim.CommandText = "DELETE FROM runtime_events WHERE id <= (SELECT MAX(id) FROM runtime_events) - $keep";
+            trim.Parameters.AddWithValue("$keep", keep);
+            trim.ExecuteNonQuery();
+
+            transaction.Commit();
+        });
+    }
+
+    public Task<RuntimeQueryResult> QueryRuntimeEventsAsync(RuntimeQuery query)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+
+            var where = new List<string>();
+            var parameters = new List<(string, object)>();
+            if (query.Since is { } since)
+            {
+                where.Add("ts >= $since");
+                parameters.Add(("$since", since.UtcDateTime.ToString("O")));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.Component))
+            {
+                where.Add("component = $component COLLATE NOCASE");
+                parameters.Add(("$component", query.Component.Trim()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.Type))
+            {
+                where.Add("type = $type COLLATE NOCASE");
+                parameters.Add(("$type", query.Type.Trim()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.Outcome))
+            {
+                where.Add("outcome = $outcome COLLATE NOCASE");
+                parameters.Add(("$outcome", query.Outcome.Trim()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(query.Contains))
+            {
+                var like = "%" + query.Contains.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+                where.Add("(detail LIKE $like ESCAPE '\\' OR type LIKE $like ESCAPE '\\' OR component LIKE $like ESCAPE '\\')");
+                parameters.Add(("$like", like));
+            }
+
+            var clause = where.Count == 0 ? string.Empty : " WHERE " + string.Join(" AND ", where);
+
+            void Bind(SqliteCommand command)
+            {
+                foreach (var (name, value) in parameters)
+                {
+                    command.Parameters.AddWithValue(name, value);
+                }
+            }
+
+            // aggregates over everything that matches
+            int total = 0, errors = 0, llmCalls = 0;
+            long tokensIn = 0, tokensOut = 0;
+            double llmMsSum = 0;
+            DateTimeOffset? earliest = null, latest = null;
+            var byComponent = new Dictionary<string, int>();
+            var models = new SortedSet<string>();
+
+            using (var aggregate = connection.CreateCommand())
+            {
+                aggregate.CommandText = $"SELECT component, outcome, COUNT(*), COALESCE(SUM(tokens_in),0), COALESCE(SUM(tokens_out),0), COALESCE(SUM(latency_ms),0), MIN(ts), MAX(ts) FROM runtime_events{clause} GROUP BY component, outcome";
+                Bind(aggregate);
+                using var reader = aggregate.ExecuteReader();
+                while (reader.Read())
+                {
+                    var component = reader.GetString(0);
+                    var outcome = reader.GetString(1);
+                    var count = reader.GetInt32(2);
+                    total += count;
+                    if (outcome == "error")
+                    {
+                        errors += count;
+                    }
+
+                    byComponent[component] = byComponent.GetValueOrDefault(component) + count;
+                    if (component == "llm")
+                    {
+                        llmCalls += count;
+                        tokensIn += reader.GetInt64(3);
+                        tokensOut += reader.GetInt64(4);
+                        llmMsSum += reader.GetInt64(5);
+                    }
+
+                    if (DateTimeOffset.TryParse(reader.GetString(6), null, System.Globalization.DateTimeStyles.RoundtripKind, out var lo) && (earliest is null || lo < earliest))
+                    {
+                        earliest = lo;
+                    }
+
+                    if (DateTimeOffset.TryParse(reader.GetString(7), null, System.Globalization.DateTimeStyles.RoundtripKind, out var hi) && (latest is null || hi > latest))
+                    {
+                        latest = hi;
+                    }
+                }
+            }
+
+            using (var modelQuery = connection.CreateCommand())
+            {
+                modelQuery.CommandText = $"SELECT DISTINCT model FROM runtime_events{(clause.Length == 0 ? " WHERE" : clause + " AND")} model IS NOT NULL";
+                Bind(modelQuery);
+                using var reader = modelQuery.ExecuteReader();
+                while (reader.Read())
+                {
+                    models.Add(reader.GetString(0));
+                }
+            }
+
+            var events = new List<RuntimeEvent>();
+            using (var rows = connection.CreateCommand())
+            {
+                rows.CommandText = $"SELECT id, ts, component, type, outcome, latency_ms, model, tokens_in, tokens_out, detail FROM runtime_events{clause} ORDER BY id DESC LIMIT $limit";
+                Bind(rows);
+                rows.Parameters.AddWithValue("$limit", Math.Clamp(query.Limit, 1, 100));
+                using var reader = rows.ExecuteReader();
+                while (reader.Read())
+                {
+                    events.Add(new RuntimeEvent(
+                        DateTimeOffset.Parse(reader.GetString(1), null, System.Globalization.DateTimeStyles.RoundtripKind),
+                        reader.GetString(2),
+                        reader.GetString(3),
+                        reader.GetString(4),
+                        reader.GetString(9),
+                        reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                        reader.IsDBNull(6) ? null : reader.GetString(6),
+                        reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                        reader.IsDBNull(8) ? null : reader.GetInt32(8)) { Id = reader.GetInt64(0) });
+                }
+            }
+
+            return new RuntimeQueryResult(events, total, errors, byComponent, llmCalls, tokensIn, tokensOut,
+                llmCalls == 0 ? 0 : llmMsSum / llmCalls, models.ToList(), earliest, latest);
+        });
+    }
+
     public Task<IReadOnlyList<MemoryItem>> GetMemoryByPrefixAsync(string prefix)
     {
         return Task.Run<IReadOnlyList<MemoryItem>>(() =>
@@ -1520,6 +1691,29 @@ public sealed class JournalDatabaseService
         EnsureChatSchema(connection);
         EnsureMemorySchema(connection);
         EnsureProvenanceSchema(connection);
+        EnsureRuntimeLogSchema(connection);
+    }
+
+    private static void EnsureRuntimeLogSchema(SqliteConnection connection)
+    {
+        using var create = connection.CreateCommand();
+        create.CommandText = """
+            CREATE TABLE IF NOT EXISTS runtime_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts TEXT NOT NULL,
+                component TEXT NOT NULL,
+                type TEXT NOT NULL,
+                outcome TEXT NOT NULL,
+                latency_ms INTEGER,
+                model TEXT,
+                tokens_in INTEGER,
+                tokens_out INTEGER,
+                detail TEXT NOT NULL DEFAULT ''
+            );
+            CREATE INDEX IF NOT EXISTS ix_runtime_events_ts ON runtime_events(ts);
+            CREATE INDEX IF NOT EXISTS ix_runtime_events_component ON runtime_events(component, ts);
+            """;
+        create.ExecuteNonQuery();
     }
 
     /// <summary>
