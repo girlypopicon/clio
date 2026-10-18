@@ -39,7 +39,7 @@ Target framework is .NET 9. Solution file is `CLIo.sln` containing `CLIo.csproj`
 ### Key layers:
 
 - **Views/** — Avalonia XAML views. `MainWindow.axaml` is the primary UI; `SplashWindow.axaml` shows during init.
-- **ViewModels/** — `MainWindowViewModel` contains UI state, commands, and orchestration flow.
+- **ViewModels/** — `MainWindowViewModel` contains UI state, commands, and orchestration flow. It is a partial class: the main file holds state, commands and the chat flow; `.Voice`, `.Review` (review/approval/tidy/updates), `.Commands` (prefix and `__` commands), `.CalendarParsing`, `.MemoryCapture` and `.ResponseParsing` hold the rest.
 - **Models/** — Plain data classes: `ChatMessage`, `ChatThread`, `LlmMessage`, `CalendarEvent`, `CalendarDayCell`, `JournalEntry`, `JournalTask`, `MemoryItem`, `MemoryTransaction`, `CalendarCandidate`, `ActionBadge`.
 - **Services/** — Business logic and data access:
   - `JournalDatabaseService` — all SQLite access (schema creation, migrations, CRUD)
