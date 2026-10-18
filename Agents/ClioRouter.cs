@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace CLIo.Agents;
 
 public sealed class ClioRouter
@@ -71,14 +73,24 @@ public sealed class ClioRouter
         return ClioAgentIds.GeneralChat;
     }
 
-    private static bool ContainsDateContext(string lower)
+    // Whole-word matching: plain Contains("am") or Contains("on ") matched "name", "example", "money".
+    private static readonly Regex DateContext = new(
+        @"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|tonight|today|next week|\d{1,2}(:\d{2})?\s?(am|pm)|at \d|on (mon|tue|wed|thu|fri|sat|sun)|on the \d|on \d)",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static bool ContainsDateContext(string lower) => DateContext.IsMatch(lower);
+
+    /// <summary>
+    /// A short per-turn nudge for the routed domain, appended after the stable system prompt.
+    /// General chat gets none. It narrows attention only; it grants no abilities.
+    /// </summary>
+    public static string? FocusFor(string agentId) => agentId switch
     {
-        return lower.Contains("monday") || lower.Contains("tuesday") || lower.Contains("wednesday")
-            || lower.Contains("thursday") || lower.Contains("friday") || lower.Contains("saturday")
-            || lower.Contains("sunday") || lower.Contains("tomorrow") || lower.Contains("next week")
-            || lower.Contains("today") || lower.Contains("tonight") || lower.Contains("am")
-            || lower.Contains("pm") || lower.Contains("at ") || lower.Contains("on ");
-    }
+        ClioAgentIds.Memory => "Turn focus: this message is about remembering or recalling information. Prefer the structured memory block over prose, and ask before treating a guess as a fact.",
+        ClioAgentIds.Calendar => "Turn focus: this message is about time. Resolve relative dates against the current local time, give an ISO 8601 datetime with offset, and ask if the day or time is ambiguous.",
+        ClioAgentIds.Task => "Turn focus: this message is about something to do. Keep the task title short and actionable; do not invent a due date.",
+        _ => null
+    };
 
     private static bool IsMemoryCategory(string lower)
     {

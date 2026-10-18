@@ -1799,6 +1799,10 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             agent = matchedAgent;
             turnAgentPrompt = AgentCatalog.BuildPrompt(matchedAgent);
         }
+        else if (Agents.ClioRouter.FocusFor(routedAgent) is { } focus)
+        {
+            turnAgentPrompt = focus;
+        }
 
         var llmMessages = await BuildLlmMessagesAsync(prompt, now);
 
