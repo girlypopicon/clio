@@ -9,5 +9,7 @@ public interface ICalendarService
     Task DeleteEventAsync(int id);
     Task UpdateEventStartAsync(int id, DateTimeOffset startsAt);
     Task UpdateEventAsync(int id, string title, DateTimeOffset startsAt, string details, string source = "chat");
+    /// <summary>Makes an event repeat (or stop repeating when <paramref name="rule"/> is null).</summary>
+    Task SetRecurrenceAsync(int id, RecurrenceRule? rule);
     IReadOnlyList<CalendarEvent> FindMatchingEvents(string title, DateTimeOffset? when, IReadOnlyList<CalendarEvent> events);
 }

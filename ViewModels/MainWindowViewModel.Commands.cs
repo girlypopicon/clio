@@ -334,6 +334,14 @@ public partial class MainWindowViewModel
             return;
         }
 
+        if (normalized == "repeat" || normalized.StartsWith("repeat "))
+        {
+            var repeatReply = new ChatMessage { Role = "assistant", Content = await HandleRepeatCommandAsync(body.Trim()[6..].Trim()), Timestamp = DateTimeOffset.Now };
+            ChatMessages.Add(repeatReply);
+            await database.AddChatMessageAsync(SelectedThreadId, repeatReply.Role, repeatReply.Content, repeatReply.Timestamp);
+            return;
+        }
+
         if (normalized is "tidy")
         {
             var (found, added) = await RunTidyScanAsync();
@@ -665,5 +673,41 @@ public partial class MainWindowViewModel
             new("system", context.ToString(), now),
             new("user", body, now)
         };
+    }
+
+    private const string RepeatUsage = "Make an event repeat: __repeat #<id> every tuesday | every 2 weeks | weekdays | monthly | daily until 2026-12-31 | off. The #id is shown next to the event in the calendar list.";
+
+    private async Task<string> HandleRepeatCommandAsync(string args)
+    {
+        await LoadEventsAsync();
+        var match = Regex.Match(args, @"^#?(\d+)\s+(.+)$");
+        if (!match.Success)
+        {
+            return RepeatUsage;
+        }
+
+        var id = int.Parse(match.Groups[1].Value);
+        var series = CalendarEvents.FirstOrDefault(e => e.Id == id);
+        if (series is null)
+        {
+            return $"No calendar event #{id}. {RepeatUsage}";
+        }
+
+        var phrase = match.Groups[2].Value.Trim();
+        if (phrase.ToLowerInvariant() is "off" or "stop" or "none" or "once")
+        {
+            await calendarService.SetRecurrenceAsync(id, null);
+            await LoadEventsAsync();
+            return $"\"{series.Title}\" no longer repeats.";
+        }
+
+        if (!RecurrenceRule.TryParseNatural(phrase, out var rule))
+        {
+            return $"I couldn't read \"{phrase}\" as a repeat pattern. {RepeatUsage}";
+        }
+
+        await calendarService.SetRecurrenceAsync(id, rule);
+        await LoadEventsAsync();
+        return $"\"{series.Title}\" now repeats {rule.Describe()}, starting from its first date. Changes to one occurrence apply to the whole series.";
     }
 }

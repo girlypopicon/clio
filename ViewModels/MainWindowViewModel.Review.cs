@@ -158,7 +158,7 @@ public partial class MainWindowViewModel
             await LoadEventsAsync();
             await LoadTasksAsync();
 
-            var proposals = TidyScanner.Scan(MemoryItems.ToList(), CalendarEvents.ToList(), Tasks.ToList());
+            var proposals = TidyScanner.Scan(MemoryItems.ToList(), CalendarEvents.Where(e => !e.IsOccurrence).ToList(), Tasks.ToList());
             var openBefore = (await database.GetOpenReviewItemsAsync()).Count;
             foreach (var p in proposals)
             {
