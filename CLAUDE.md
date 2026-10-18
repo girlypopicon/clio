@@ -39,7 +39,7 @@ Target framework is .NET 9. Solution file is `CLIo.sln` containing `CLIo.csproj`
 ### Key layers:
 
 - **Views/** — Avalonia XAML views. `MainWindow.axaml` is the primary UI; `SplashWindow.axaml` shows during init.
-- **ViewModels/** — `MainWindowViewModel` contains UI state, commands, and orchestration flow.
+- **ViewModels/** — `MainWindowViewModel` contains UI state, commands, and orchestration flow. It is a partial class: the main file holds state, commands and the chat flow; `.Voice`, `.Review` (review/approval/tidy/updates), `.Commands` (prefix and `__` commands), `.CalendarParsing`, `.MemoryCapture` and `.ResponseParsing` hold the rest.
 - **Models/** — Plain data classes: `ChatMessage`, `ChatThread`, `LlmMessage`, `CalendarEvent`, `CalendarDayCell`, `JournalEntry`, `JournalTask`, `MemoryItem`, `MemoryTransaction`, `CalendarCandidate`, `ActionBadge`.
 - **Services/** — Business logic and data access:
   - `JournalDatabaseService` — all SQLite access (schema creation, migrations, CRUD)
@@ -82,6 +82,7 @@ Target framework is .NET 9. Solution file is `CLIo.sln` containing `CLIo.csproj`
 - `++` — add calendar event or task (LLM determines which based on date context)
 - `--` — delete calendar event or task
 - `==` — reschedule/move calendar event
+- `__repeat #<id> <pattern>` — make a calendar event repeat (`every tuesday`, `weekdays`, `every 2 weeks`, `monthly until 2026-12-31`, or `off`)
 - `__` — display/navigate + memory operations (`__tasks`, `__user`, `__people`, `__forget <key>`, `__search <term>`, `__compact`, etc.)
 
 ### Provenance (manual edits outrank chat):
@@ -108,6 +109,10 @@ Target framework is .NET 9. Solution file is `CLIo.sln` containing `CLIo.csproj`
 - **Prompt layout rule:** `SystemPromptBuilder` puts everything stable first (so DeepSeek's prefix cache hits) and everything that changes per message (counters, memory, calendar, tasks, time) last. Keep it that way.
 - **Self-check:** `CLIo.exe --validate-services` verifies the DI wiring without creating anything or touching data (exit code 0 = fine, text in the file named by `CLIO_VALIDATE_OUT`). Run it after changing constructors or `Startup.cs`.
 - **Planned (not built):** texting (an `Acts` skill, always approved), a GlowRom connector, and the user's own email app feeding outside-calendar events in as inbound data with its own `source` value (never `manual`, so manual edits still win).
+
+## Recurring events
+
+`calendar_events.recurrence` holds an RFC 5545 RRULE subset (`FREQ`, `INTERVAL`, `BYDAY` for weekly, `UNTIL`, `COUNT`) parsed and expanded by `RecurrenceRule`. The stored row is the series; its own start is the first occurrence. `CalendarService.GetAllEventsAsync` returns computed occurrences (30 days back to 120 ahead) that share the series' `Id` and have `Recurrence` set (`IsOccurrence`). Edits, moves and deletes by `Id` apply to the whole series (moves keep the series' first date and take only the time of day); per-occurrence exceptions and a `temporal_log` audit table are not built. Reminders are created once per occurrence. The tidy scan ignores occurrences.
 
 ## Database Schema
 

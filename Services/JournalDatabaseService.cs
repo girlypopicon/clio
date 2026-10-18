@@ -186,7 +186,7 @@ public sealed class JournalDatabaseService
             var events = new List<CalendarEvent>();
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "SELECT id, title, starts_at, details, source FROM calendar_events ORDER BY starts_at LIMIT 500";
+            command.CommandText = "SELECT id, title, starts_at, details, source, recurrence FROM calendar_events ORDER BY starts_at LIMIT 500";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -202,7 +202,8 @@ public sealed class JournalDatabaseService
                     Title = reader.GetString(1),
                     StartsAt = startsAt,
                     Details = reader.GetString(3),
-                    Source = reader.GetString(4)
+                    Source = reader.GetString(4),
+                    Recurrence = reader.IsDBNull(5) || reader.GetString(5).Length == 0 ? null : reader.GetString(5)
                 });
             }
 
@@ -266,6 +267,41 @@ public sealed class JournalDatabaseService
             }
 
             return reminders;
+        });
+    }
+
+    public Task SetEventRecurrenceAsync(int id, string? rrule)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE calendar_events SET recurrence = $rule WHERE id = $id";
+            command.Parameters.AddWithValue("$rule", (object?)rrule ?? DBNull.Value);
+            command.Parameters.AddWithValue("$id", id);
+            command.ExecuteNonQuery();
+        });
+    }
+
+    /// <summary>True when a reminder for this event was created at or after <paramref name="since"/> (one per occurrence of a series).</summary>
+    public Task<bool> ReminderExistsForEventSinceAsync(int eventId, DateTimeOffset since)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT due_at FROM reminders WHERE source_event_id = $eventId";
+            command.Parameters.AddWithValue("$eventId", eventId);
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                if (DateTimeOffset.TryParse(reader.GetString(0), out var due) && due >= since)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         });
     }
 
@@ -1803,6 +1839,13 @@ public sealed class JournalDatabaseService
                 alter.CommandText = $"ALTER TABLE {table} ADD COLUMN source_at TEXT NOT NULL DEFAULT ''";
                 alter.ExecuteNonQuery();
             }
+        }
+
+        if (!ColumnExists(connection, "calendar_events", "recurrence"))
+        {
+            using var alter = connection.CreateCommand();
+            alter.CommandText = "ALTER TABLE calendar_events ADD COLUMN recurrence TEXT";
+            alter.ExecuteNonQuery();
         }
 
         using var create = connection.CreateCommand();

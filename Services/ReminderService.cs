@@ -88,7 +88,10 @@ public sealed class ReminderService
         var events = await calendar.GetAllEventsAsync();
         foreach (var item in events.Where(e => e.StartsAt > now && e.StartsAt <= now.AddMinutes(lead)))
         {
-            if (await database.ReminderExistsForEventAsync(item.Id))
+            var already = item.IsOccurrence
+                ? await database.ReminderExistsForEventSinceAsync(item.Id, item.StartsAt.AddMinutes(-lead - 1))
+                : await database.ReminderExistsForEventAsync(item.Id);
+            if (already)
             {
                 continue;
             }

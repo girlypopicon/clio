@@ -305,7 +305,7 @@ public sealed class SystemPromptBuilder
         sb.AppendLine();
         sb.AppendLine("Upcoming calendar/schedule (chronological) - fields: #id | when(ISO 8601) | title | details:");
         foreach (var e in relevant)
-            sb.AppendLine($"- #{e.Id} | {e.StartsAt:O} | {e.Title} | {e.Details}");
+            sb.AppendLine($"- #{e.Id} | {e.StartsAt:O} | {e.Title} | {e.Details}" + (e.Recurrence is null ? string.Empty : " | repeats (" + (RecurrenceRule.TryParse(e.Recurrence, out var rule) ? rule.Describe() : "recurring") + "; a change to one applies to the whole series)"));
     }
 
     private static void AppendTasks(StringBuilder sb, SystemPromptContext ctx)
