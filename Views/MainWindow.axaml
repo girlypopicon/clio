@@ -450,7 +450,8 @@
                 <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
                     <TextBlock Grid.Column="0" Text="{Binding UpdateBannerText}" VerticalAlignment="Center" Foreground="#E6E9EE"/>
                     <Button Grid.Column="1" Content="INSTALL" Classes="primary" IsVisible="{Binding CanInstallUpdate}" Command="{Binding InstallUpdateCommand}"/>
-                    <Button Grid.Column="2" Content="VIEW RELEASE" Classes="ghost" Command="{Binding OpenUpdatePageCommand}"/>
+                    <Button Grid.Column="1" Content="UPDATE" Classes="primary" IsVisible="{Binding IsSourceUpdateBanner}" Command="{Binding UpdateFromSourceCommand}"/>
+                    <Button Grid.Column="2" Content="VIEW RELEASE" Classes="ghost" IsVisible="{Binding HasReleasePage}" Command="{Binding OpenUpdatePageCommand}"/>
                     <Button Grid.Column="3" Content="LATER" Classes="ghost" Command="{Binding DismissUpdateCommand}"/>
                 </Grid>
             </Border>
@@ -778,10 +779,10 @@
                                                             <TextBlock Text="{Binding Evidence}" Classes="calendarSubtitle"/>
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                                            <Button Content="KEEP MINE" Classes="ghost"
+                                                            <Button Content="{Binding DismissLabel}" Classes="ghost"
                                                                     Command="{Binding $parent[Window].DataContext.DismissReviewCommand}"
                                                                     CommandParameter="{Binding}"/>
-                                                            <Button Content="USE CHAT'S" Classes="primary"
+                                                            <Button Content="{Binding AcceptLabel}" Classes="primary"
                                                                     Command="{Binding $parent[Window].DataContext.AcceptReviewCommand}"
                                                                     CommandParameter="{Binding}"/>
                                                         </StackPanel>

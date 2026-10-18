@@ -1,4 +1,4 @@
-using CLIo.Agents;
+﻿using CLIo.Agents;
 using CLIo.Services;
 using CLIo.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,7 +7,8 @@ namespace CLIo;
 
 public static class Startup
 {
-    public static IServiceProvider ConfigureServices()
+    /// <param name="validate">Check that every service can be built from what is registered, without creating any of them.</param>
+    public static IServiceProvider ConfigureServices(bool validate = false)
     {
         var services = new ServiceCollection();
 
@@ -41,6 +42,9 @@ public static class Startup
         services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.UpdateSkill>();
         services.AddSingleton<CLIo.Services.Update.UpdateInstaller>();
         services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.InstallUpdateSkill>();
+        services.AddSingleton<CLIo.Services.Update.SourceUpdater>();
+        services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.UpdateFromSourceSkill>();
+        services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.ReadSourceSkill>();
         services.AddSingleton<CLIo.Services.Skills.SkillRegistry>();
         services.AddSingleton<CLIo.Services.Skills.AgentCatalog>();
 
@@ -64,6 +68,8 @@ public static class Startup
         // ViewModel
         services.AddTransient<MainWindowViewModel>();
 
-        return services.BuildServiceProvider();
+        return validate
+            ? services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true })
+            : services.BuildServiceProvider();
     }
 }

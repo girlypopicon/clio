@@ -56,8 +56,10 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         AgentCatalog agentCatalog,
         UpdateService updateService,
         UpdateInstaller updateInstaller,
-        RuntimeLog runtimeLog)
+        RuntimeLog runtimeLog,
+        SourceUpdater sourceUpdater)
     {
+        this.sourceUpdater = sourceUpdater;
         this.runtimeLog = runtimeLog;
         this.updateService = updateService;
         this.updateInstaller = updateInstaller;
@@ -172,6 +174,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
     private readonly UpdateService updateService;
     private readonly UpdateInstaller updateInstaller;
     private readonly RuntimeLog runtimeLog;
+    private readonly SourceUpdater sourceUpdater;
     private string? turnAgentPrompt;
 
     [ObservableProperty]
@@ -992,7 +995,11 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             return;
         }
 
-        if (item.Kind == "memory")
+        if (item.IsTidy)
+        {
+            await ApplyTidyAsync(item);
+        }
+        else if (item.Kind == "memory")
         {
             var type = memoryService.MemoryTypeForKey(item.TargetKey);
             await memoryService.UpsertAsync(item.TargetKey, item.ProposedValue, type, "manual");
@@ -1013,6 +1020,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         }
 
         await database.ResolveReviewItemAsync(item.Id, "accepted");
+        NoteCorrection(item.IsTidy ? "tidy_accept" : "review_accept", item.TargetKey, item.CurrentValue, item.ProposedValue, item.Label);
         runtimeLog.Record("review", "accepted", "ok", $"{item.Kind}: {item.Label}");
         await LoadReviewAsync();
     }
@@ -1027,6 +1035,9 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         }
 
         await database.ResolveReviewItemAsync(item.Id, "dismissed");
+
+        // "Keep mine" rejects what chat claimed: exactly the signal that shows where filing was wrong.
+        NoteCorrection(item.IsTidy ? "tidy_decline" : "review_keep", item.TargetKey, item.IsTidy ? item.ProposedValue : item.ProposedValue, item.CurrentValue, item.Label);
         runtimeLog.Record("review", "dismissed", "ok", $"{item.Kind}: {item.Label}");
         await LoadReviewAsync();
     }
@@ -1077,6 +1088,102 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         approvalSource?.TrySetResult(false);
     }
 
+    // ---- nightly tidy: finds duplicates and badly shaped entries, proposes, never decides ---------
+
+    private void NoteCorrection(string kind, string target, string oldValue, string newValue, string note = "") =>
+        _ = RecordCorrectionAsync(kind, target, oldValue, newValue, note);
+
+    private async Task RecordCorrectionAsync(string kind, string target, string oldValue, string newValue, string note)
+    {
+        try
+        {
+            await database.AddCorrectionAsync(kind, target, oldValue, newValue, "manual", note);
+            runtimeLog.Record("corrections", kind, "ok", $"{target}: \"{Shorten(oldValue, 60)}\" -> \"{Shorten(newValue, 60)}\"");
+        }
+        catch (Exception ex)
+        {
+            devLog.Log($"Could not record a correction: {ex.Message}", "corrections");
+        }
+    }
+
+    private static string Shorten(string text, int max) => text.Length <= max ? text : text[..(max - 1)] + "…";
+
+    /// <summary>Runs the rule-based scan and puts anything worth a look into Review. Returns how many were new.</summary>
+    private async Task<(int Found, int New)> RunTidyScanAsync()
+    {
+        var timer = runtimeLog.Start("tidy", "scan");
+        try
+        {
+            await LoadMemoryAsync();
+            await LoadEventsAsync();
+            await LoadTasksAsync();
+
+            var proposals = TidyScanner.Scan(MemoryItems.ToList(), CalendarEvents.ToList(), Tasks.ToList());
+            var openBefore = (await database.GetOpenReviewItemsAsync()).Count;
+            foreach (var p in proposals)
+            {
+                await database.AddReviewItemAsync(p.Kind, p.Target, p.Label, p.Current, p.Proposed, "tidy");
+            }
+
+            // a tidy suggestion that no longer applies (fixed by hand since) should not linger
+            var current = proposals.Select(p => $"{p.Kind}|{p.Target}|{p.Proposed}").ToHashSet();
+            foreach (var open in await database.GetOpenReviewItemsAsync())
+            {
+                if (open.IsTidy && !current.Contains($"{open.Kind}|{open.TargetKey}|{open.ProposedValue}"))
+                {
+                    await database.ResolveReviewItemAsync(open.Id, "stale");
+                }
+            }
+
+            await LoadReviewAsync();
+            var added = Math.Max(0, OpenReviewCount - openBefore);
+            await database.SetSettingAsync("tidy_last_run", DateTimeOffset.Now.ToString("O"));
+            timer.Done("ok", $"{proposals.Count} candidate(s), {added} new in Review");
+            return (proposals.Count, added);
+        }
+        catch (Exception ex)
+        {
+            timer.Done("error", ex.Message);
+            devLog.Log($"Tidy scan failed: {ex.Message}", "tidy");
+            return (0, 0);
+        }
+    }
+
+    /// <summary>About once a night while the app is open (or at the next start after 20 hours); never right at startup.</summary>
+    private async Task RunTidyLoopAsync()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(90));
+        using var timer = new PeriodicTimer(TimeSpan.FromHours(1));
+        do
+        {
+            try
+            {
+                var last = DateTimeOffset.TryParse(await database.GetSettingAsync("tidy_last_run"), out var parsed) ? parsed : DateTimeOffset.MinValue;
+                if (DateTimeOffset.Now - last > TimeSpan.FromHours(20))
+                {
+                    await RunTidyScanAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                devLog.Log($"Tidy loop error: {ex.Message}", "tidy");
+            }
+        }
+        while (await timer.WaitForNextTickAsync());
+    }
+
+    /// <summary>Carries out an accepted tidy proposal (see TidyApplier) and refreshes whatever it touched.</summary>
+    private async Task ApplyTidyAsync(ReviewItem item)
+    {
+        var applied = await new TidyApplier(database, memoryService, calendarService, taskService).ApplyAsync(item);
+        runtimeLog.Record("tidy", item.Kind, applied ? "ok" : "skipped", applied ? item.Label : "no longer applied, nothing changed: " + item.Label);
+
+        await LoadMemoryAsync();
+        await LoadMemoryTransactionsAsync();
+        await LoadEventsAsync();
+        await LoadTasksAsync();
+    }
+
     // ---- update notice ------------------------------------------------------------------------
 
     [ObservableProperty]
@@ -1110,7 +1217,49 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
     private string updateUrl = string.Empty;
     private string updateTag = string.Empty;
 
-    /// <summary>Checks about once a day while the app is open; a dismissed version stays dismissed.</summary>
+    [ObservableProperty]
+    private bool isSourceUpdateBanner;
+
+    [ObservableProperty]
+    private bool hasReleasePage;
+
+    /// <summary>The banner's Update button for a copy run from source: the same approved update the chat skill does.</summary>
+    [RelayCommand]
+    private async Task UpdateFromSourceAsync()
+    {
+        var text = await skillRegistry.RunAsync([new SkillCall("update_from_source", "latest")]);
+        var declined = text.Contains("declined", StringComparison.OrdinalIgnoreCase);
+        var note = new ChatMessage
+        {
+            Role = "assistant",
+            Content = declined
+                ? "Okay, I won't update. Nothing was changed."
+                : text.Replace("SKILL RESULTS. Use them to answer the user's last message.", string.Empty).Replace("<<<DATA", string.Empty).Replace("DATA>>>", string.Empty).Trim(),
+            Timestamp = DateTimeOffset.Now
+        };
+        ChatMessages.Add(note);
+        await database.AddChatMessageAsync(SelectedThreadId, note.Role, note.Content, note.Timestamp);
+
+        // whatever happened, look again so the banner is honest (a successful pull means "restart me")
+        await RefreshSourceUpdateStateAsync();
+        await ShowUpdateBannerFromSettingsAsync();
+    }
+
+    /// <summary>Looks at GitHub for new changes when this copy runs from source. Cheap, so it runs at every check.</summary>
+    private async Task RefreshSourceUpdateStateAsync()
+    {
+        var status = await sourceUpdater.CheckAsync();
+        if (!status.IsSourceCopy || status.Remote.Length == 0)
+        {
+            await database.SetSettingAsync("update_source_behind", "0");
+            return;
+        }
+
+        await database.SetSettingAsync("update_source_behind", status.Behind.ToString());
+        await database.SetSettingAsync("update_source_head", status.Head);
+    }
+
+    /// <summary>Checks the releases about once a day, and a source copy's GitHub changes at every tick (every 6 h and at start).</summary>
     private async Task RunUpdateLoopAsync()
     {
         using var timer = new PeriodicTimer(TimeSpan.FromHours(6));
@@ -1132,6 +1281,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
                     }
                 }
 
+                await RefreshSourceUpdateStateAsync();
                 await ShowUpdateBannerFromSettingsAsync();
             }
             catch (Exception ex)
@@ -1147,17 +1297,34 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         var tag = await database.GetSettingAsync("update_latest_tag");
         var url = await database.GetSettingAsync("update_latest_url");
         var dismissed = await database.GetSettingAsync("update_dismissed_tag");
+        var sourceBehind = int.TryParse(await database.GetSettingAsync("update_source_behind"), out var behind) ? behind : 0;
+        var sourceHead = await database.GetSettingAsync("update_source_head");
+        var sourceKey = $"source:{sourceBehind}@{sourceHead}";
 
-        // A newer release than the one we are running, that the user has not dismissed.
+        // An installed release copy: a newer published release that the user has not dismissed.
         var isNewer = tag.Length > 0
             && Version.TryParse(tag.TrimStart('v', 'V'), out var latest)
             && AppVersion.Normalize(latest) > AppVersion.Parsed;
-        if (isNewer && tag != dismissed && UpdateService.IsRepoUrl(url))
+        var isSourceCopy = sourceUpdater.FindRoot() is not null;
+
+        if (isNewer && !isSourceCopy && tag != dismissed && UpdateService.IsRepoUrl(url))
         {
             updateTag = tag;
             updateUrl = url;
+            IsSourceUpdateBanner = false;
+            HasReleasePage = true;
             UpdateBannerText = $"CLIo {tag.TrimStart('v', 'V')} is available. You're on {AppVersion.Text}.";
             CanInstallUpdate = updateInstaller.GetLayout().CanSelfUpdate;
+            IsUpdateBannerVisible = true;
+        }
+        else if (isSourceCopy && sourceBehind > 0 && sourceKey != dismissed)
+        {
+            updateTag = sourceKey;
+            updateUrl = string.Empty;
+            IsSourceUpdateBanner = true;
+            HasReleasePage = false;
+            CanInstallUpdate = false;
+            UpdateBannerText = $"{sourceBehind} new change{(sourceBehind == 1 ? string.Empty : "s")} on GitHub. You're on {sourceHead}.";
             IsUpdateBannerVisible = true;
         }
         else
@@ -1454,7 +1621,18 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
 
         var local = SelectedCalendarDate.Date + (editor.Time ?? TimeSpan.Zero);
         var startsAt = new DateTimeOffset(local, TimeZoneInfo.Local.GetUtcOffset(local));
+        var before = CalendarEvents.FirstOrDefault(e => e.Id == editor.Id);
         await calendarService.UpdateEventAsync(editor.Id, editor.Title.Trim(), startsAt, editor.Details?.Trim() ?? string.Empty, "manual");
+        if (before is not null)
+        {
+            var oldText = $"{before.Title} @ {before.StartsAt:yyyy-MM-dd HH:mm}" + (before.Details.Length > 0 ? $" ({before.Details})" : string.Empty);
+            var newText = $"{editor.Title.Trim()} @ {startsAt:yyyy-MM-dd HH:mm}" + (editor.Details?.Trim().Length > 0 ? $" ({editor.Details.Trim()})" : string.Empty);
+            if (oldText != newText)
+            {
+                NoteCorrection("event_edit", $"event #{editor.Id}", oldText, newText, "edited by hand (was " + before.Source + ")");
+            }
+        }
+
         await LoadEventsAsync();
     }
 
@@ -1499,7 +1677,13 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         }
 
         var type = memoryService.MemoryTypeForKey(MemoryKey.Trim());
+        var previousValue = await database.GetMemoryValueAsync(MemoryKey.Trim());
         await memoryService.UpsertAsync(MemoryKey.Trim(), MemoryValue.Trim(), type, "manual");
+        if (previousValue != MemoryValue.Trim())
+        {
+            NoteCorrection("memory_edit", MemoryKey.Trim(), previousValue ?? string.Empty, MemoryValue.Trim(), previousValue is null ? "added by hand" : "changed by hand");
+        }
+
         await database.AddMemoryTransactionAsync("write", MemoryKey.Trim(), MemoryValue.Trim(), "success", "manual", type: type);
         MemoryKey = string.Empty;
         MemoryValue = string.Empty;
@@ -1516,6 +1700,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         }
 
         await memoryService.DeleteAsync(SelectedMemoryItem.Key);
+        NoteCorrection("memory_delete", SelectedMemoryItem.Key, SelectedMemoryItem.Value, string.Empty, "deleted by hand");
         await database.AddMemoryTransactionAsync("delete", SelectedMemoryItem.Key, string.Empty, "success", "manual", type: SelectedMemoryItem.Type);
         SelectedMemoryItem = null;
         MemoryKey = string.Empty;
@@ -1975,6 +2160,39 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             var listing = new ChatMessage { Role = "assistant", Content = UpdateService.Describe(info), Timestamp = DateTimeOffset.Now };
             ChatMessages.Add(listing);
             await database.AddChatMessageAsync(SelectedThreadId, listing.Role, listing.Content, listing.Timestamp);
+            return;
+        }
+
+        if (normalized is "tidy")
+        {
+            var (found, added) = await RunTidyScanAsync();
+            var tidyNote = new ChatMessage
+            {
+                Role = "assistant",
+                Timestamp = DateTimeOffset.Now,
+                Content = found == 0
+                    ? "Tidy scan: nothing looks duplicated or badly shaped."
+                    : $"Tidy scan: {found} thing(s) worth a look, {added} new. They are in Review (menu > Review); nothing changes until you decide."
+            };
+            ChatMessages.Add(tidyNote);
+            await database.AddChatMessageAsync(SelectedThreadId, tidyNote.Role, tidyNote.Content, tidyNote.Timestamp);
+            return;
+        }
+
+        if (normalized is "corrections")
+        {
+            var rows = await database.GetCorrectionsAsync(20);
+            var report = new ChatMessage
+            {
+                Role = "assistant",
+                Timestamp = DateTimeOffset.Now,
+                Content = rows.Count == 0
+                    ? "No corrections recorded yet. A correction is logged whenever you change or delete something by hand, or settle a Review item."
+                    : "Your recent corrections (newest first):\n" + string.Join("\n", rows.Select(r =>
+                        $"  {r.Time.ToLocalTime():MM-dd HH:mm} {r.Kind} {r.Target}: \"{Shorten(r.OldValue, 50)}\" -> \"{Shorten(r.NewValue, 50)}\""))
+            };
+            ChatMessages.Add(report);
+            await database.AddChatMessageAsync(SelectedThreadId, report.Role, report.Content, report.Timestamp);
             return;
         }
 
@@ -2534,6 +2752,7 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         devLog.Log($"CLIo v{SystemPromptBuilder.Version} started, session #{await clioState.GetAsync("session_count")}", "startup");
         runtimeLog.Record("app", "start", "ok", $"CLIo v{SystemPromptBuilder.Version}, session #{await clioState.GetAsync("session_count")}");
         _ = RunUpdateLoopAsync();
+        _ = RunTidyLoopAsync();
     }
 
     private const int MaxMessagesPerThread = 400;
@@ -2810,11 +3029,11 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
             MemoryItems = MemoryItems.ToList(),
             CalendarEvents = CalendarEvents.ToList(),
             Tasks = Tasks.ToList(),
-            SelfContext = selfContext
+            SelfContext = selfContext,
+            SkillsPrompt = skillRegistry.BuildPromptSection()
         });
 
         var context = new StringBuilder(systemPrompt);
-        context.AppendLine(skillRegistry.BuildPromptSection());
         if (turnAgentPrompt is not null)
         {
             context.AppendLine(turnAgentPrompt);
@@ -3931,7 +4150,9 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
 
     private static CalendarDirective? InferCalendarDirectiveFromPrompt(string prompt)
     {
-        if (!CalendarRequestRegex.IsMatch(prompt))
+        // A real "show me my week" request is short. A long message that merely mentions a calendar
+        // ("... what do I have next week ...") is a conversation, and must not be turned into a widget.
+        if (prompt.Trim().Length > MaxCalendarRequestLength || !CalendarRequestRegex.IsMatch(prompt))
         {
             return null;
         }
@@ -3964,6 +4185,8 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
 
         return new CalendarDirective(mode, anchor);
     }
+
+    private const int MaxCalendarRequestLength = 120;
 
     private static readonly Regex AsciiCalendarBlockRegex = new(
         @"```[\s\S]*?```",
@@ -4042,9 +4265,20 @@ public partial class MainWindowViewModel : ViewModelBase, IApprovalProvider
         };
 
         var eventCount = days.Sum(day => day.Events.Count);
-        assistant.Content = eventCount == 0
+        var summary = eventCount == 0
             ? $"Nothing on the calendar for {rangeLabel}."
             : $"Here's {rangeLabel} - {eventCount} item(s) on the calendar.";
+        assistant.Content = ComposeCalendarReply(assistant.Content, summary);
+    }
+
+    /// <summary>
+    /// The widget shows the calendar itself. The one-line summary stands in only when the model said almost
+    /// nothing; a real answer is never replaced (that was a bug: the calendar swallowed the actual reply).
+    /// </summary>
+    private static string ComposeCalendarReply(string? modelText, string summary)
+    {
+        var text = modelText?.Trim() ?? string.Empty;
+        return text.Length >= 60 ? text : summary;
     }
 
     private async Task<IReadOnlyList<MemoryCandidate>> ApplyMemoryCandidatesAsync(IReadOnlyList<MemoryCandidate> candidates, string source)

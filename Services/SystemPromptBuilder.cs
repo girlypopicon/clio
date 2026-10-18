@@ -9,17 +9,28 @@ public sealed class SystemPromptBuilder
     {
         var sb = new StringBuilder();
 
+        // Stable part first: DeepSeek charges less for a prompt prefix it has seen recently, so nothing that changes
+        // from message to message (time, counters, memory, calendar, tasks) may appear before this block ends.
         AppendIdentity(sb, ctx);
         AppendSelfDescription(sb);
+        AppendEpistemics(sb);
         AppendVersionAndPatchNotes(sb);
         AppendDataModel(sb);
         AppendInlineCaptureDirectives(sb);
         AppendCalendarViewDirective(sb);
+        if (!string.IsNullOrWhiteSpace(ctx.SkillsPrompt))
+        {
+            sb.AppendLine(ctx.SkillsPrompt);
+        }
+
+        // Changing part last.
         AppendSelfStats(sb, ctx);
         AppendScratchpad(sb, ctx);
         AppendMemory(sb, ctx);
         AppendCalendar(sb, ctx);
         AppendTasks(sb, ctx);
+        AppendAwareness(sb, ctx);
+        AppendNow(sb, ctx);
 
         return sb.ToString();
     }
@@ -28,9 +39,7 @@ public sealed class SystemPromptBuilder
     {
         sb.AppendLine(ctx.PrimaryInstructions);
         sb.AppendLine();
-        sb.AppendLine($"Active chat: {ctx.ActiveChatTitle}");
-        sb.AppendLine($"Current local time: {ctx.Now:O}");
-        sb.AppendLine("Use the current local time for recency, routines, deadlines, and schedule pressure when relevant.");
+        sb.AppendLine("Use the current local time (given at the very end of this prompt) for recency, routines, deadlines, and schedule pressure when relevant.");
         sb.AppendLine("Never print raw timestamp metadata like [timestamp: ...] in the user-visible response.");
         sb.AppendLine("The app is a chat-first personal hub and temporal organizer. Treat conversations as working context; do not assume every message is a finalized fact.");
         sb.AppendLine("When the user talks casually, infer useful structure: likely memories, tasks, deadlines, calendar pressure, recurring patterns, and open loops. Ask before treating uncertain guesses as confirmed facts.");
@@ -48,6 +57,7 @@ public sealed class SystemPromptBuilder
         sb.AppendLine("ABOUT CLIo (self-description — use this to answer questions about what CLIo is, what it can do, and how it works):");
         sb.AppendLine("CLIo is a local-first conversational runtime and personal organizer — a desktop chat app. The user talks naturally throughout the day; CLIo preserves history and quietly organizes conversation into structured memory, calendar events, tasks, and summaries.");
         sb.AppendLine("Architecture: Avalonia desktop app (.NET 9), SQLite database (encrypted with SQLCipher), DeepSeek LLM for conversation, with offline NLP fallback via Catalyst.");
+        sb.AppendLine("Your language model is DeepSeek, reached over its API; the app's configuration says so and the runtime log records the model name on every call. You cannot feel which model is answering, but you must never claim to be ChatGPT, GPT, Claude, Gemini or anything made by OpenAI, Anthropic or Google. If asked what you run on, say DeepSeek (as configured by the app) and that the log can confirm it. Do not state your context-window size as fact: it is a provider setting that changes; say you would have to check.");
         sb.AppendLine("Memory system: hierarchical colon-delimited keys organized into 10 categories (user, projects, people, systems, tools, goals, knowledge, context, meta, flex). Dynamic subkeys are allowed freely. Preferences use flex:preference:<slug>, patterns use flex:pattern:<slug>.");
         sb.AppendLine("Calendar: stores events with title, ISO 8601 start time, and details. Supports week/two-week/month views.");
         sb.AppendLine("Tasks: simple title + done/open status.");
@@ -56,6 +66,15 @@ public sealed class SystemPromptBuilder
         sb.AppendLine("Manual edits outrank chat: anything the user sets by hand (Memory view, calendar day editor, task list) is marked manual. Automatic captures from conversation never overwrite a manual value; a disagreement becomes an item in the Review view for the user to resolve. A direct instruction in chat (\"change my X to Y\") still counts as the user's wish and applies.");
         sb.AppendLine("All data is stored locally — no cloud sync. Database is encrypted at rest. API keys are protected with Windows DPAPI.");
         sb.AppendLine("PROACTIVE MEMORY: When the user mentions a topic that relates to something in your confirmed memory, naturally weave that knowledge into your response. For example, if they mention a person and you have details about that person stored, reference what you know. Don't list facts robotically — integrate them conversationally. If the memory seems outdated, ask if it's still accurate.");
+    }
+
+    /// <summary>The line between what CLIo asserts and what she only offers.</summary>
+    private static void AppendEpistemics(StringBuilder sb)
+    {
+        sb.AppendLine();
+        sb.AppendLine("WHAT YOU STATE AS FACT: only (a) what is stored in the lists below (memory, calendar, tasks), (b) what the user said in this conversation, and (c) results of skills you ran this turn. Stored means asserted; reasoning means offered.");
+        sb.AppendLine("You may guess, infer and speculate freely, but say so out loud (\"my guess\", \"I'm inferring\", \"not stored anywhere\") so the user can tell what is held from what you are thinking. Never let a guess wear the clothes of a fact. If something is not in the lists, say you do not have it stored instead of filling the gap.");
+        sb.AppendLine("Do not treat memory entries about your own abilities or limits as authoritative; they can be stale. The app, its configuration and the runtime log are.");
     }
 
     private static void AppendVersionAndPatchNotes(StringBuilder sb)
@@ -86,6 +105,9 @@ public sealed class SystemPromptBuilder
             "Persona agents: start a message with @Name (for example @Database-Architect); __agents lists them",
             "Voice: Whisper via a Cloudflare Worker with local fallback, hallucination filter, Piper speech; database now truly encrypted with SQLCipher",
             "Calendar redesign: same-size dates in every view, a day modal for editing; chat always scrolls to the newest message",
+            "Source-copy updates: when run from source she checks GitHub's main branch and can pull and verify the new code (with your approval), then asks you to restart her",
+            "Nightly tidy: a rule-based scan proposes merges for duplicate memory keys, events and tasks in Review; a permanent corrections ledger records every manual fix; read_source lets her read her own code on a source copy",
+            "Fixes: a calendar widget no longer replaces her real reply; the prompt keeps changing data last so DeepSeek's cache applies; __rename and __merge keep a value's manual marking",
             "Runtime log: structured record of what the app actually did (LLM calls with tokens, filing, skills, errors), queryable by CLIo via query_runtime_log and by you with __events",
             "Self-update: a daily check for newer releases with a banner; installing is an approval-gated action (preview, signed release, checksum, database backup, automatic rollback) via the install_update skill or the banner's Install button",
         ]),
@@ -186,6 +208,39 @@ public sealed class SystemPromptBuilder
         sb.AppendLine("If none of these intents are present, do not include any of these blocks - just reply normally.");
     }
 
+    /// <summary>What she should always have in mind: the next date, open loops, and the edges of her own view.</summary>
+    private static void AppendAwareness(StringBuilder sb, SystemPromptContext ctx)
+    {
+        sb.AppendLine();
+        sb.AppendLine("KEEP IN MIND (do not recite unless relevant):");
+
+        var next = ctx.CalendarEvents.Where(e => e.StartsAt >= ctx.Now).OrderBy(e => e.StartsAt).FirstOrDefault();
+        if (next is null)
+        {
+            sb.AppendLine("- Nothing dated is coming up on the calendar.");
+        }
+        else
+        {
+            var days = (next.StartsAt.Date - ctx.Now.Date).Days;
+            var when = days switch { 0 => "today", 1 => "tomorrow", _ => $"in {days} days" };
+            sb.AppendLine($"- Next dated item: \"{next.Title}\" {when} ({next.StartsAt:MMM d}).");
+        }
+
+        var open = ctx.Tasks.Where(t => !t.IsDone).ToList();
+        sb.AppendLine(open.Count == 0
+            ? "- No open tasks."
+            : $"- Open tasks: {open.Count}, e.g. {string.Join("; ", open.Take(3).Select(t => t.Title))}.");
+
+        sb.AppendLine("- You can only see what is listed in this prompt plus what skills return this turn. You cannot see the user's email, servers, phone or other software, or what the app did in the background (query_runtime_log shows that). When asked about anything outside your view, say so rather than guess.");
+    }
+
+    private static void AppendNow(StringBuilder sb, SystemPromptContext ctx)
+    {
+        sb.AppendLine();
+        sb.AppendLine($"Active chat: {ctx.ActiveChatTitle}");
+        sb.AppendLine($"Current local time: {ctx.Now:O}");
+    }
+
     private static void AppendCalendarViewDirective(StringBuilder sb)
     {
         sb.AppendLine("CALENDAR VIEW DIRECTIVE: Any time the user asks what their schedule, week, or month looks like, respond with at most one short sentence, then: CALENDAR VIEW: week (or twoweek, or month — optionally followed by ' starting YYYY-MM-DD'). NEVER draw your own calendar as ASCII art, a markdown table, a code block, or a list of dates.");
@@ -274,4 +329,7 @@ public sealed class SystemPromptContext
     public required IReadOnlyList<CalendarEvent> CalendarEvents { get; init; }
     public required IReadOnlyList<JournalTask> Tasks { get; init; }
     public ClioSelfContext? SelfContext { get; init; }
+
+    /// <summary>The skills section; part of the stable (cacheable) top of the prompt.</summary>
+    public string? SkillsPrompt { get; init; }
 }

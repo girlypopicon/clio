@@ -1172,6 +1172,50 @@ public sealed class JournalDatabaseService
         });
     }
 
+    // ---- corrections ledger (permanent, tiny) --------------------------------------------------
+
+    public Task AddCorrectionAsync(string kind, string target, string oldValue, string newValue, string source, string note = "")
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                INSERT INTO corrections(ts, kind, target, old_value, new_value, source, note)
+                VALUES ($ts, $kind, $target, $old, $new, $source, $note)
+                """;
+            command.Parameters.AddWithValue("$ts", DateTimeOffset.UtcNow.ToString("O"));
+            command.Parameters.AddWithValue("$kind", kind);
+            command.Parameters.AddWithValue("$target", target);
+            command.Parameters.AddWithValue("$old", oldValue);
+            command.Parameters.AddWithValue("$new", newValue);
+            command.Parameters.AddWithValue("$source", source);
+            command.Parameters.AddWithValue("$note", note);
+            command.ExecuteNonQuery();
+        });
+    }
+
+    public Task<IReadOnlyList<Correction>> GetCorrectionsAsync(int limit = 20)
+    {
+        return Task.Run<IReadOnlyList<Correction>>(() =>
+        {
+            var items = new List<Correction>();
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT ts, kind, target, old_value, new_value, source, note FROM corrections ORDER BY id DESC LIMIT $limit";
+            command.Parameters.AddWithValue("$limit", Math.Clamp(limit, 1, 500));
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                items.Add(new Correction(
+                    DateTimeOffset.Parse(reader.GetString(0), null, System.Globalization.DateTimeStyles.RoundtripKind),
+                    reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetString(6)));
+            }
+
+            return items;
+        });
+    }
+
     // ---- runtime event log ---------------------------------------------------------------------
 
     public Task AddRuntimeEventsAsync(IReadOnlyList<RuntimeEvent> events, int keep)
@@ -1404,7 +1448,7 @@ public sealed class JournalDatabaseService
 
             using var readCommand = connection.CreateCommand();
             readCommand.Transaction = transaction;
-            readCommand.CommandText = "SELECT value, updated_at FROM memory_items WHERE key = $oldKey";
+            readCommand.CommandText = "SELECT value, updated_at, source, source_at FROM memory_items WHERE key = $oldKey";
             readCommand.Parameters.AddWithValue("$oldKey", oldKey);
 
             using var reader = readCommand.ExecuteReader();
@@ -1416,20 +1460,25 @@ public sealed class JournalDatabaseService
 
             var value = reader.GetString(0);
             var updatedAt = reader.GetString(1);
+            var source = reader.GetString(2);
+            var sourceAt = reader.GetString(3);
             reader.Close();
 
             var category = newKey.Contains(':') ? newKey.Split(':')[0] : "flex";
             using var insertCommand = connection.CreateCommand();
             insertCommand.Transaction = transaction;
             insertCommand.CommandText = """
-                INSERT INTO memory_items(key, value, updated_at, type)
-                VALUES ($key, $value, $updatedAt, $type)
-                ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+                INSERT INTO memory_items(key, value, updated_at, type, source, source_at)
+                VALUES ($key, $value, $updatedAt, $type, $source, $sourceAt)
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at,
+                    source = excluded.source, source_at = excluded.source_at
                 """;
             insertCommand.Parameters.AddWithValue("$key", newKey);
             insertCommand.Parameters.AddWithValue("$value", value);
             insertCommand.Parameters.AddWithValue("$updatedAt", updatedAt);
             insertCommand.Parameters.AddWithValue("$type", category);
+            insertCommand.Parameters.AddWithValue("$source", source);
+            insertCommand.Parameters.AddWithValue("$sourceAt", sourceAt);
             insertCommand.ExecuteNonQuery();
 
             using var deleteCommand = connection.CreateCommand();
@@ -1473,9 +1522,10 @@ public sealed class JournalDatabaseService
             using var upsertCommand = connection.CreateCommand();
             upsertCommand.Transaction = transaction;
             upsertCommand.CommandText = """
-                INSERT INTO memory_items(key, value, updated_at, type)
-                VALUES ($key, $value, $updatedAt, $type)
-                ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+                INSERT INTO memory_items(key, value, updated_at, type, source, source_at)
+                VALUES ($key, $value, $updatedAt, $type, 'manual', $updatedAt)
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at,
+                    source = 'manual', source_at = excluded.updated_at
                 """;
             upsertCommand.Parameters.AddWithValue("$key", targetKey);
             upsertCommand.Parameters.AddWithValue("$value", merged);
@@ -1709,6 +1759,16 @@ public sealed class JournalDatabaseService
                 tokens_in INTEGER,
                 tokens_out INTEGER,
                 detail TEXT NOT NULL DEFAULT ''
+            );
+            CREATE TABLE IF NOT EXISTS corrections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                target TEXT NOT NULL,
+                old_value TEXT NOT NULL DEFAULT '',
+                new_value TEXT NOT NULL DEFAULT '',
+                source TEXT NOT NULL,
+                note TEXT NOT NULL DEFAULT ''
             );
             CREATE INDEX IF NOT EXISTS ix_runtime_events_ts ON runtime_events(ts);
             CREATE INDEX IF NOT EXISTS ix_runtime_events_component ON runtime_events(component, ts);
