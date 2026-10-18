@@ -14,7 +14,7 @@ pwsh tools\New-ReleaseKey.ps1
 ## Making a release
 
 1. Bump `<Version>` in `CLIo.csproj` and add a patch-notes entry in `Services/SystemPromptBuilder.cs`.
-2. Commit and push to `main`.
+2. Commit and push to `main`. (The build refuses a version without a matching top patch-notes entry; see `docs/VERSIONING.md`.)
 3. Build, package and sign (nothing is uploaded yet):
    ```powershell
    pwsh tools\Publish-Release.ps1 -Notes "What changed, in a sentence or two."

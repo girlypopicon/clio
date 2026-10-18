@@ -8,7 +8,7 @@
     <ApplicationIcon>Assets\clio.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -132,5 +132,16 @@ File.WriteAllText(KeySourceOutput, sb.ToString());
       <EmbeddedResource Include="$(IntermediateOutputPath)selfdocs.bin" LogicalName="CLIo.SelfDocs.architecture.bin" />
       <Compile Include="$(IntermediateOutputPath)SelfDocsKey.g.cs" />
     </ItemGroup>
+  </Target>
+
+  <!-- Strict versioning: the build fails unless the newest patch-notes entry is exactly <Version>.
+       Bump <Version> and add the entry together (see docs/VERSIONING.md). -->
+  <Target Name="CheckVersionHasPatchNotes" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <PatchNotesSource>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/Services/SystemPromptBuilder.cs'))</PatchNotesSource>
+      <NewestPatchNotesVersion>$([System.Text.RegularExpressions.Regex]::Match('$(PatchNotesSource)', 'new\("v([0-9]+[.][0-9]+[.][0-9]+)"').Groups[1].Value)</NewestPatchNotesVersion>
+    </PropertyGroup>
+    <Error Condition="'$(NewestPatchNotesVersion)' != '$(Version)'"
+           Text="Version mismatch: CLIo.csproj says $(Version) but the newest patch-notes entry in Services/SystemPromptBuilder.cs is '$(NewestPatchNotesVersion)'. Bump both together (docs/VERSIONING.md)." />
   </Target>
 </Project>

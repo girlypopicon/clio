@@ -97,6 +97,13 @@ public sealed class SystemPromptBuilder
 
     private static readonly PatchEntry[] PatchNotes =
     [
+        new("v0.5.0", "2026-10-18",
+        [
+            "Recurring events: a calendar event can repeat (daily, weekly on chosen days, every N weeks, monthly, yearly, with an optional end date or count). Make one repeat with __repeat #<id> every tuesday (or weekdays, monthly, off). Repeating events show a ↻ mark, one reminder fires per occurrence, and a change to one applies to the whole series",
+            "Routing: each message is routed to memory, calendar, task or general chat and that gives the turn a short focus hint; date detection no longer mistakes ordinary words like 'name' or 'money' for times",
+            "Behind the scenes: the main view model was split into smaller files (no behavior change)",
+            "Versioning is now strict: the build fails unless the version and the newest patch-notes entry match",
+        ]),
         new("v0.4.0", "2026-10-18",
         [
             "Auto-filing: after every reply a separate pass files memory, tasks (with dates), calendar events and dev notes from what you said, with badges showing what it did",
