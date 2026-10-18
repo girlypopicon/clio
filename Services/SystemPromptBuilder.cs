@@ -35,6 +35,7 @@ public sealed class SystemPromptBuilder
         sb.AppendLine("The app is a chat-first personal hub and temporal organizer. Treat conversations as working context; do not assume every message is a finalized fact.");
         sb.AppendLine("When the user talks casually, infer useful structure: likely memories, tasks, deadlines, calendar pressure, recurring patterns, and open loops. Ask before treating uncertain guesses as confirmed facts.");
         sb.AppendLine("Main Chat is the hub. Scoped chats should stay focused, but they may use Main Chat context as shared project/background context. Do not pull in unrelated scoped-chat context unless the active chat is Main Chat.");
+        sb.AppendLine("Never offer to create a separate or focused chat for a topic. The user creates those themselves when they want one.");
         sb.AppendLine("Style rule: be plainspoken and specific. Answer directly without rephrasing the user's point back to them first.");
         sb.AppendLine("Avoid these phrases and patterns unless the user explicitly asks for that tone: 'you did not just X, you Y'; 'this is not just X, it is Y'; 'at its core'; 'at the end of the day'; 'that is the beauty of X'; 'the real gift here is'; 'you are not alone in feeling that'; 'it takes courage to'; 'that is so valid'; 'I hear that you are saying'; 'it sounds like you are feeling'; 'let us unpack that'; 'that is a really great question'; 'I appreciate you sharing that with me'; overuse of journey, chapter, season of life; and using navigating as a catch-all verb.");
         sb.AppendLine("Do not use therapy-speak or motivational reframes before answering. If empathy is needed, keep it short and concrete.");
@@ -52,6 +53,7 @@ public sealed class SystemPromptBuilder
         sb.AppendLine("Tasks: simple title + done/open status.");
         sb.AppendLine("Commands: ++ (add event/task), -- (delete event/task), == (reschedule event), @@ (set a popup reminder, e.g. @@ call mom in 30 minutes), __ (display/navigate/memory operations).");
         sb.AppendLine("__ sub-commands: __tasks, __memory, __<category> (e.g. __user, __people), __forget <key>, __rename <old> <new>, __merge <target> <source>, __search <term>, __compact.");
+        sb.AppendLine("Manual edits outrank chat: anything the user sets by hand (Memory view, calendar day editor, task list) is marked manual. Automatic captures from conversation never overwrite a manual value; a disagreement becomes an item in the Review view for the user to resolve. A direct instruction in chat (\"change my X to Y\") still counts as the user's wish and applies.");
         sb.AppendLine("All data is stored locally — no cloud sync. Database is encrypted at rest. API keys are protected with Windows DPAPI.");
         sb.AppendLine("PROACTIVE MEMORY: When the user mentions a topic that relates to something in your confirmed memory, naturally weave that knowledge into your response. For example, if they mention a person and you have details about that person stored, reference what you know. Don't list facts robotically — integrate them conversationally. If the memory seems outdated, ask if it's still accurate.");
     }
@@ -71,11 +73,20 @@ public sealed class SystemPromptBuilder
         }
     }
 
-    public const string Version = "0.2.3";
-    public const string ReleaseDate = "2026-06-28";
+    public const string Version = "0.4.0";
+    public const string ReleaseDate = "2026-10-18";
 
     private static readonly PatchEntry[] PatchNotes =
     [
+        new("v0.4.0", "2026-10-18",
+        [
+            "Auto-filing: after every reply a separate pass files memory, tasks (with dates), calendar events and dev notes from what you said, with badges showing what it did",
+            "Manual edits win: anything you set by hand is marked manual and never overwritten by a chat capture; disagreements appear in the Review view",
+            "Skills: web_search, browse, and self_docs (how CLIo works); results are treated as untrusted data",
+            "Persona agents: start a message with @Name (for example @Database-Architect); __agents lists them",
+            "Voice: Whisper via a Cloudflare Worker with local fallback, hallucination filter, Piper speech; database now truly encrypted with SQLCipher",
+            "Calendar redesign: same-size dates in every view, a day modal for editing; chat always scrolls to the newest message",
+        ]),
         new("v0.2.3", "2026-06-28",
         [
             "Visual confirmation badges: messages now show colored icons when actions are taken — 📅 +cal, ✦ +task, ✓ done, 🧠 memory, 📋 dev note, × removed, ↗ moved, ~ edited",
@@ -151,23 +162,11 @@ public sealed class SystemPromptBuilder
     private static void AppendInlineCaptureDirectives(StringBuilder sb)
     {
         sb.AppendLine();
-        sb.AppendLine("INLINE CAPTURE DIRECTIVE - read carefully: if the user's latest message expresses an intent to add/save/remember something, schedule/add an appointment or event, cancel/delete/remove an appointment or event, or add/track a task, append the matching structured block below AFTER your normal reply (on new lines). Only include a block when that specific intent is clearly present. Do not explain or mention these blocks to the user.");
-
-        // Memory
-        sb.AppendLine("To save or update memory, append:\nMEMORY CANDIDATES\nkey -> value");
-        sb.AppendLine("Memory keys use colon-delimited hierarchical format: category:subcategory:item. The first segment MUST be one of these 10 categories: user, projects, people, systems, tools, goals, knowledge, context, meta, flex.");
-        sb.AppendLine("Category examples: user:name, user:occupation, user:health:conditions, user:routines:morning, user:interests, user:favorites:foods, people:partner, people:sarah:phone, projects:current, projects:sendpop:status, goals:active, goals:current_focus, context:constraints, systems:tech_setup, meta:reflection_style, knowledge:skills, flex:preference:coffee_cream_sugar.");
-        sb.AppendLine("For preferences (likes/dislikes/quirks), use flex:preference:<slug>. For observed recurring patterns, use flex:pattern:<slug>. Each distinct preference or pattern gets its own key.");
-        sb.AppendLine("Dynamic subkeys are allowed freely under any category - e.g. people:sarah:phone, projects:sendpop:tech_stack. Create new subkeys as needed to organize information naturally.");
-        sb.AppendLine("Do not use flat keys without a category prefix - every key must start with one of the 10 categories listed above.");
-
-        // Schedule
-        sb.AppendLine("To add an appointment/event, append (when must be a precise ISO 8601 timestamp with offset, computed relative to the current local time given above - never relative phrases like 'tomorrow'):\nSCHEDULE CANDIDATES\ntitle | when | details\nCRITICAL: always include the exact header line `SCHEDULE CANDIDATES` before the data rows. Never write the data as bare inline text without the header — the app will not detect it. Never claim an event was added without appending this block.");
+        sb.AppendLine("AUTO-FILING: the app files memory, new tasks, new calendar events and feature/bug notes for CLIo by itself, in a separate pass after each reply, and shows a small badge on the message when it does. You do NOT write memory, task-add, schedule-add or dev-note blocks. Never say you saved, added, logged, noted, or filed anything - you cannot see whether the pass found something. Just reply naturally to what the user said. If the user asks whether something was saved, point them to the badge and the Memory, Tasks and Calendar views.");
+        sb.AppendLine("For the actions below that change or remove EXISTING items, append the matching structured block AFTER your normal reply (on new lines). Only include a block when that specific intent is clearly present. Do not explain or mention these blocks to the user.");
 
         // Tasks
-        sb.AppendLine("To add one or more tasks/to-dos, append a single block with one task per line:\nTASK CANDIDATES\ntitle | reason/context\nIf the user gives multiple tasks at once, list every one on its own line in the same block - do not split them across multiple blocks or omit any. Strip status suffixes from titles (e.g. '- in progress', '- pending') - the title should be the task itself, not its status.");
         sb.AppendLine("To mark one or more existing tasks as complete/done, append:\nTASK COMPLETE\ntitle\nOne title per line. Match the existing task title as closely as possible.");
-        sb.AppendLine("CRITICAL: never tell the user a task was added or marked complete unless you actually appended the corresponding TASK CANDIDATES or TASK COMPLETE block in this same reply. A false 'done' is worse than emitting the block.");
 
         // Calendar delete
         sb.AppendLine("IMPORTANT - cancellations are NOT memories: if the user asks to cancel, delete, remove, or get rid of one or more appointments/events/reminders (e.g. 'delete the pedicure appointment', 'cancel my dentist visit', 'remove the meeting on Friday', 'delete the two things on my calendar this week'), do NOT use MEMORY CANDIDATES. Instead append one line per event under a single block:\nCALENDAR DELETE\ntitle | date or exact datetime (optional, YYYY-MM-DD or full ISO 8601 with offset)\nUse the calendar's upcoming-events list above to identify the exact title(s) and date(s) the user means. If there is more than one event with the same title on the same day, disambiguate using that event's exact start time. If you cannot tell which one the user means, ask which one instead of guessing.");
@@ -182,8 +181,7 @@ public sealed class SystemPromptBuilder
         sb.AppendLine("CRITICAL: never tell the user an appointment was deleted, removed, cancelled, moved, or edited unless you actually appended the corresponding block in this same reply. If you are not sure which event the user means, ask for clarification.");
         sb.AppendLine("CRITICAL: the 'Upcoming calendar/schedule' list provided below is the live, ground-truth state of the calendar. Before answering any question about what is/isn't on the calendar, re-check that list directly. Never rely on a prior message's claim about calendar state.");
         sb.AppendLine("CRITICAL: when the user asks to delete/cancel/remove/move an appointment, ALWAYS append the block for that turn, even if the request is casual or brief.");
-        sb.AppendLine("DEV NOTES: if the user suggests a feature, improvement, or bug fix for CLIo itself (e.g. 'you should be able to do X', 'it would be cool if...', 'can you add...'), append:\nDEV NOTE\ndescription of the feature/improvement\nThis logs it as a development note for future updates. Only use this for suggestions about CLIo's own capabilities, not for the user's personal tasks.");
-        sb.AppendLine("If none of these intents are present, do not include any of these blocks - just reply normally. The app also runs memory extraction separately in the background as a fallback.");
+        sb.AppendLine("If none of these intents are present, do not include any of these blocks - just reply normally.");
     }
 
     private static void AppendCalendarViewDirective(StringBuilder sb)

@@ -1,0 +1,10 @@
+{
+  "name": "clio-stt-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/handler.test.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  }
+}

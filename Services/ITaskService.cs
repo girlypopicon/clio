@@ -5,7 +5,7 @@ namespace CLIo.Services;
 public interface ITaskService
 {
     Task<IReadOnlyList<JournalTask>> GetAllAsync();
-    Task AddAsync(string title);
+    Task AddAsync(string title, string source = "chat");
     Task DeleteAsync(int id);
     Task SetDoneAsync(int id, bool isDone);
     Task<bool> CompleteByTitleAsync(string title);

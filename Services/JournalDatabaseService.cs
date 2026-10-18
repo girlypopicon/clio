@@ -6,6 +6,7 @@ namespace CLIo.Services;
 public sealed class JournalDatabaseService
 {
     private readonly string connectionString;
+    private readonly string dbFilePath;
     private readonly DataProtectionService dataProtection;
 
     public JournalDatabaseService(DataProtectionService dataProtection)
@@ -14,6 +15,7 @@ public sealed class JournalDatabaseService
         var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CLIo");
         Directory.CreateDirectory(appData);
         var dbPath = Path.Combine(appData, "clio.db");
+        dbFilePath = dbPath;
         connectionString = new SqliteConnectionStringBuilder { DataSource = dbPath }.ToString();
 
         SQLitePCL.Batteries_V2.Init();
@@ -22,40 +24,100 @@ public sealed class JournalDatabaseService
         MigrateToHierarchicalKeys();
     }
 
+    /// <summary>
+    /// Encrypts an existing plain SQLite database with SQLCipher. SQLCipher cannot rekey a plain
+    /// file in place, so the data is exported into a new encrypted file, verified table by table,
+    /// and only then swapped in. The original is kept as clio.db.plain-backup (delete it once you
+    /// have confirmed CLIo works). On any failure the original file is left exactly as it was.
+    /// </summary>
     private void MigrateToEncryptedDatabase(string dbPath)
     {
-        if (!File.Exists(dbPath))
+        if (!File.Exists(dbPath) || new FileInfo(dbPath).Length == 0)
             return;
 
-        // Try opening without a key to check if unencrypted
+        // A plain database opens without a key; an encrypted one throws "file is not a database".
+        List<string> tables;
         try
         {
-            using var testConn = new SqliteConnection(connectionString);
-            testConn.Open();
-            using var testCmd = testConn.CreateCommand();
-            testCmd.CommandText = "SELECT count(*) FROM sqlite_master";
-            testCmd.ExecuteScalar();
+            tables = ListTables(dbPath, null);
         }
         catch
         {
-            // Already encrypted or corrupt — skip
-            return;
+            return; // already encrypted (or unreadable): never touch it
         }
 
-        // DB is unencrypted — encrypt it in place using sqlcipher's rekey
+        var tempPath = dbPath + ".enc.tmp";
+        var backupPath = dbPath + ".plain-backup";
+        var hex = dataProtection.MasterKeyHex;
+
         try
         {
-            using var conn = new SqliteConnection(connectionString);
-            conn.Open();
+            File.Delete(tempPath);
 
-            using var rekeyCmd = conn.CreateCommand();
-            rekeyCmd.CommandText = $"PRAGMA rekey = \"x'{dataProtection.MasterKeyHex}'\"";
-            rekeyCmd.ExecuteNonQuery();
+            var plainConnection = new SqliteConnectionStringBuilder { DataSource = dbPath, Pooling = false }.ToString();
+            using (var conn = new SqliteConnection(plainConnection))
+            {
+                conn.Open();
+                using var export = conn.CreateCommand();
+                export.CommandText =
+                    $"ATTACH DATABASE '{tempPath.Replace("'", "''")}' AS encrypted KEY \"x'{hex}'\"; " +
+                    "SELECT sqlcipher_export('encrypted'); DETACH DATABASE encrypted;";
+                export.ExecuteNonQuery();
+            }
+
+            foreach (var table in tables)
+            {
+                var before = CountRows(dbPath, null, table);
+                var after = CountRows(tempPath, hex, table);
+                if (before != after)
+                    throw new InvalidOperationException($"Row count mismatch in {table}: {before} vs {after}");
+            }
+
+            SqliteConnection.ClearAllPools();
+            File.Move(dbPath, backupPath, overwrite: true);
+            File.Move(tempPath, dbPath);
         }
-        catch (Exception)
+        catch
         {
-            // rekey failed — DB remains unencrypted, app still works
+            // Leave the original database untouched; the app keeps working unencrypted.
+            try { File.Delete(tempPath); } catch { }
         }
+    }
+
+    private static List<string> ListTables(string path, string? hexKey)
+    {
+        var tables = new List<string>();
+        using var conn = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Pooling = false }.ToString());
+        conn.Open();
+        if (hexKey is not null)
+        {
+            using var key = conn.CreateCommand();
+            key.CommandText = $"PRAGMA key = \"x'{hexKey}'\"";
+            key.ExecuteNonQuery();
+        }
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+            tables.Add(reader.GetString(0));
+        return tables;
+    }
+
+    private static long CountRows(string path, string? hexKey, string table)
+    {
+        using var conn = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = path, Pooling = false }.ToString());
+        conn.Open();
+        if (hexKey is not null)
+        {
+            using var key = conn.CreateCommand();
+            key.CommandText = $"PRAGMA key = \"x'{hexKey}'\"";
+            key.ExecuteNonQuery();
+        }
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"SELECT count(*) FROM \"{table.Replace("\"", "\"\"")}\"";
+        return Convert.ToInt64(cmd.ExecuteScalar());
     }
 
     public Task<IReadOnlyList<JournalEntry>> GetEntriesAsync()
@@ -124,7 +186,7 @@ public sealed class JournalDatabaseService
             var events = new List<CalendarEvent>();
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "SELECT id, title, starts_at, details FROM calendar_events ORDER BY starts_at LIMIT 500";
+            command.CommandText = "SELECT id, title, starts_at, details, source FROM calendar_events ORDER BY starts_at LIMIT 500";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -139,7 +201,8 @@ public sealed class JournalDatabaseService
                     Id = reader.GetInt32(0),
                     Title = reader.GetString(1),
                     StartsAt = startsAt,
-                    Details = reader.GetString(3)
+                    Details = reader.GetString(3),
+                    Source = reader.GetString(4)
                 });
             }
 
@@ -147,16 +210,18 @@ public sealed class JournalDatabaseService
         });
     }
 
-    public Task AddEventAsync(string title, DateTimeOffset startsAt, string details)
+    public Task AddEventAsync(string title, DateTimeOffset startsAt, string details, string source = "chat")
     {
         return Task.Run(() =>
         {
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "INSERT INTO calendar_events(title, starts_at, details) VALUES ($title, $startsAt, $details)";
+            command.CommandText = "INSERT INTO calendar_events(title, starts_at, details, source, source_at) VALUES ($title, $startsAt, $details, $source, $sourceAt)";
             command.Parameters.AddWithValue("$title", title);
             command.Parameters.AddWithValue("$startsAt", startsAt.ToString("O"));
             command.Parameters.AddWithValue("$details", details);
+            command.Parameters.AddWithValue("$source", source);
+            command.Parameters.AddWithValue("$sourceAt", DateTimeOffset.Now.ToString("O"));
             command.ExecuteNonQuery();
         });
     }
@@ -267,16 +332,18 @@ public sealed class JournalDatabaseService
         });
     }
 
-    public Task UpdateEventAsync(int id, string title, DateTimeOffset startsAt, string details)
+    public Task UpdateEventAsync(int id, string title, DateTimeOffset startsAt, string details, string source = "chat")
     {
         return Task.Run(() =>
         {
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "UPDATE calendar_events SET title = $title, starts_at = $startsAt, details = $details WHERE id = $id";
+            command.CommandText = "UPDATE calendar_events SET title = $title, starts_at = $startsAt, details = $details, source = $source, source_at = $sourceAt WHERE id = $id";
             command.Parameters.AddWithValue("$title", title);
             command.Parameters.AddWithValue("$startsAt", startsAt.ToString("O"));
             command.Parameters.AddWithValue("$details", details);
+            command.Parameters.AddWithValue("$source", source);
+            command.Parameters.AddWithValue("$sourceAt", DateTimeOffset.Now.ToString("O"));
             command.Parameters.AddWithValue("$id", id);
             command.ExecuteNonQuery();
         });
@@ -306,14 +373,16 @@ public sealed class JournalDatabaseService
         });
     }
 
-    public Task AddTaskAsync(string title)
+    public Task AddTaskAsync(string title, string source = "chat")
     {
         return Task.Run(() =>
         {
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "INSERT INTO journal_tasks(title, is_done) VALUES ($title, 0)";
+            command.CommandText = "INSERT INTO journal_tasks(title, is_done, source, source_at) VALUES ($title, 0, $source, $sourceAt)";
             command.Parameters.AddWithValue("$title", title);
+            command.Parameters.AddWithValue("$source", source);
+            command.Parameters.AddWithValue("$sourceAt", DateTimeOffset.Now.ToString("O"));
             command.ExecuteNonQuery();
         });
     }
@@ -756,7 +825,7 @@ public sealed class JournalDatabaseService
             var items = new List<MemoryItem>();
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
-            command.CommandText = "SELECT key, value, updated_at, type FROM memory_items ORDER BY key";
+            command.CommandText = "SELECT key, value, updated_at, type, source FROM memory_items ORDER BY key";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
@@ -766,7 +835,8 @@ public sealed class JournalDatabaseService
                     Key = reader.GetString(0),
                     Value = reader.GetString(1),
                     UpdatedAt = reader.GetString(2),
-                    Type = reader.GetString(3)
+                    Type = reader.GetString(3),
+                    Source = reader.GetString(4)
                 });
             }
 
@@ -955,22 +1025,150 @@ public sealed class JournalDatabaseService
         });
     }
 
-    public Task UpsertMemoryAsync(string key, string value, string type = "fact")
+    public Task UpsertMemoryAsync(string key, string value, string type = "fact", string source = "chat")
     {
         return Task.Run(() =>
         {
             using var connection = OpenConnection();
             using var command = connection.CreateCommand();
             command.CommandText = """
-                INSERT INTO memory_items(key, value, updated_at, type)
-                VALUES ($key, $value, $updatedAt, $type)
-                ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at, type = excluded.type
+                INSERT INTO memory_items(key, value, updated_at, type, source, source_at)
+                VALUES ($key, $value, $updatedAt, $type, $source, $updatedAt)
+                ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at, type = excluded.type,
+                    source = excluded.source, source_at = excluded.source_at
                 """;
             command.Parameters.AddWithValue("$key", key);
             command.Parameters.AddWithValue("$value", value);
             command.Parameters.AddWithValue("$updatedAt", DateTimeOffset.Now.ToString("O"));
             command.Parameters.AddWithValue("$type", type);
+            command.Parameters.AddWithValue("$source", source);
             command.ExecuteNonQuery();
+        });
+    }
+
+    /// <summary>Who last set this memory value ("manual" or "chat") and when. Null if the key is unset.</summary>
+    public Task<(string Value, string Source, string SourceAt)?> GetMemoryProvenanceAsync(string key)
+    {
+        return Task.Run<(string Value, string Source, string SourceAt)?>(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT value, source, source_at FROM memory_items WHERE key = $key";
+            command.Parameters.AddWithValue("$key", key);
+            using var reader = command.ExecuteReader();
+            return reader.Read() ? (reader.GetString(0), reader.GetString(1), reader.GetString(2)) : null;
+        });
+    }
+
+    public Task<int> AddReviewItemAsync(string kind, string targetKey, string label, string currentValue, string proposedValue, string evidence)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+
+            // One proposal per target and value, open or already dismissed: a repeated claim is not a new conflict.
+            using var existing = connection.CreateCommand();
+            existing.CommandText = "SELECT id FROM review_items WHERE status IN ('open', 'dismissed') AND kind = $kind AND target_key = $target AND proposed_value = $proposed";
+            existing.Parameters.AddWithValue("$kind", kind);
+            existing.Parameters.AddWithValue("$target", targetKey);
+            existing.Parameters.AddWithValue("$proposed", proposedValue);
+            if (existing.ExecuteScalar() is long existingId)
+            {
+                return (int)existingId;
+            }
+
+            using var insert = connection.CreateCommand();
+            insert.CommandText = """
+                INSERT INTO review_items(kind, target_key, label, current_value, proposed_value, evidence, status, created_at)
+                VALUES ($kind, $target, $label, $current, $proposed, $evidence, 'open', $createdAt);
+                SELECT last_insert_rowid();
+                """;
+            insert.Parameters.AddWithValue("$kind", kind);
+            insert.Parameters.AddWithValue("$target", targetKey);
+            insert.Parameters.AddWithValue("$label", label);
+            insert.Parameters.AddWithValue("$current", currentValue);
+            insert.Parameters.AddWithValue("$proposed", proposedValue);
+            insert.Parameters.AddWithValue("$evidence", evidence);
+            insert.Parameters.AddWithValue("$createdAt", DateTimeOffset.Now.ToString("O"));
+            return Convert.ToInt32(insert.ExecuteScalar());
+        });
+    }
+
+    public Task<IReadOnlyList<ReviewItem>> GetOpenReviewItemsAsync()
+    {
+        return Task.Run<IReadOnlyList<ReviewItem>>(() =>
+        {
+            var items = new List<ReviewItem>();
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT id, kind, target_key, label, current_value, proposed_value, evidence, created_at FROM review_items WHERE status = 'open' ORDER BY id DESC";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                items.Add(new ReviewItem
+                {
+                    Id = reader.GetInt32(0),
+                    Kind = reader.GetString(1),
+                    TargetKey = reader.GetString(2),
+                    Label = reader.GetString(3),
+                    CurrentValue = reader.GetString(4),
+                    ProposedValue = reader.GetString(5),
+                    Evidence = reader.GetString(6),
+                    CreatedAt = reader.GetString(7)
+                });
+            }
+
+            return items;
+        });
+    }
+
+    public Task ResolveReviewItemAsync(int id, string status)
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE review_items SET status = $status, resolved_at = $resolvedAt WHERE id = $id";
+            command.Parameters.AddWithValue("$status", status);
+            command.Parameters.AddWithValue("$resolvedAt", DateTimeOffset.Now.ToString("O"));
+            command.Parameters.AddWithValue("$id", id);
+            command.ExecuteNonQuery();
+        });
+    }
+
+    /// <summary>Table and column names only (never row data): used by the self_docs skill.</summary>
+    public Task<string> GetSchemaSummaryAsync()
+    {
+        return Task.Run(() =>
+        {
+            using var connection = OpenConnection();
+            var tables = new List<string>();
+            using (var list = connection.CreateCommand())
+            {
+                list.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name";
+                using var reader = list.ExecuteReader();
+                while (reader.Read())
+                {
+                    tables.Add(reader.GetString(0));
+                }
+            }
+
+            var sb = new System.Text.StringBuilder("Database tables and columns (encrypted with SQLCipher):\n");
+            foreach (var table in tables)
+            {
+                var columns = new List<string>();
+                using var info = connection.CreateCommand();
+                info.CommandText = $"PRAGMA table_info(\"{table.Replace("\"", "\"\"")}\")";
+                using var reader = info.ExecuteReader();
+                while (reader.Read())
+                {
+                    columns.Add($"{reader.GetString(1)} {reader.GetString(2).ToLowerInvariant()}");
+                }
+
+                sb.AppendLine($"- {table}: {string.Join(", ", columns)}");
+            }
+
+            return sb.ToString().TrimEnd();
         });
     }
 
@@ -1321,6 +1519,68 @@ public sealed class JournalDatabaseService
 
         EnsureChatSchema(connection);
         EnsureMemorySchema(connection);
+        EnsureProvenanceSchema(connection);
+    }
+
+    /// <summary>
+    /// Every memory item, calendar event and task remembers who set it last ("manual" = the user in the
+    /// UI, "chat" = filed automatically) and when, so automatic processes never silently overwrite a
+    /// value the user set by hand. Conflicts go to review_items instead.
+    /// </summary>
+    private void EnsureProvenanceSchema(SqliteConnection connection)
+    {
+        if (!ColumnExists(connection, "memory_items", "source"))
+        {
+            BackupBeforeSchemaChange();
+        }
+
+        foreach (var table in new[] { "memory_items", "calendar_events", "journal_tasks" })
+        {
+            if (!ColumnExists(connection, table, "source"))
+            {
+                using var alter = connection.CreateCommand();
+                alter.CommandText = $"ALTER TABLE {table} ADD COLUMN source TEXT NOT NULL DEFAULT 'chat'";
+                alter.ExecuteNonQuery();
+            }
+
+            if (!ColumnExists(connection, table, "source_at"))
+            {
+                using var alter = connection.CreateCommand();
+                alter.CommandText = $"ALTER TABLE {table} ADD COLUMN source_at TEXT NOT NULL DEFAULT ''";
+                alter.ExecuteNonQuery();
+            }
+        }
+
+        using var create = connection.CreateCommand();
+        create.CommandText = """
+            CREATE TABLE IF NOT EXISTS review_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL,
+                target_key TEXT NOT NULL,
+                label TEXT NOT NULL DEFAULT '',
+                current_value TEXT NOT NULL DEFAULT '',
+                proposed_value TEXT NOT NULL DEFAULT '',
+                evidence TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'open',
+                created_at TEXT NOT NULL,
+                resolved_at TEXT NOT NULL DEFAULT ''
+            );
+            """;
+        create.ExecuteNonQuery();
+    }
+
+    private void BackupBeforeSchemaChange()
+    {
+        try
+        {
+            var dir = Path.Combine(Path.GetDirectoryName(dbFilePath)!, "backups");
+            Directory.CreateDirectory(dir);
+            File.Copy(dbFilePath, Path.Combine(dir, $"clio.db.pre-provenance-{DateTime.Now:yyyyMMdd-HHmmss}"), overwrite: false);
+        }
+        catch
+        {
+            // Best effort: a failed backup must not stop the app from starting.
+        }
     }
 
     private static void EnsureMemorySchema(SqliteConnection connection)

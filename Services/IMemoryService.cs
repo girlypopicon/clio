@@ -6,7 +6,7 @@ public interface IMemoryService
 {
     Task<IReadOnlyList<MemoryItem>> GetAllMemoryAsync();
     Task<IReadOnlyList<MemoryTransaction>> GetTransactionsAsync(int limit = 80);
-    Task UpsertAsync(string key, string value, string type);
+    Task UpsertAsync(string key, string value, string type, string source = "chat");
     Task DeleteAsync(string key);
     Task<IReadOnlyList<MemoryItem>> SearchAsync(string term);
     Task RenameKeyAsync(string oldKey, string newKey);

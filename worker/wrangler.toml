@@ -1,0 +1,24 @@
+name = "clio-stt"
+main = "src/index.js"
+compatibility_date = "2025-10-01"
+
+# Workers AI binding: env.AI
+[ai]
+binding = "AI"
+
+# Rate limiting (needs Wrangler 4.36+). Counters are per Cloudflare location and approximate.
+# Each install id may make 30 requests / 60 s (a fast talker sends about 1 clip every 3-5 s).
+[[ratelimits]]
+name = "INSTALL_LIMITER"
+namespace_id = "1001"
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
+# One IP may make 120 requests / 60 s across all install ids (stops id-rotation floods).
+[[ratelimits]]
+name = "IP_LIMITER"
+namespace_id = "1002"
+  [ratelimits.simple]
+  limit = 120
+  period = 60

@@ -14,7 +14,7 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/clio.ico"
         FontFamily="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"
-        Background="#0B0C0E"
+        Background="#1B1D22"
         Title="CLIo"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
@@ -26,14 +26,14 @@
 
     <Window.Styles>
         <Style Selector="Border.panel">
-            <Setter Property="Background" Value="#121316"/>
+            <Setter Property="Background" Value="#262930"/>
             <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="16"/>
         </Style>
         <Style Selector="Border.message">
-            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Background" Value="#2E323A"/>
             <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="2"/>
             <Setter Property="CornerRadius" Value="6"/>
@@ -50,14 +50,14 @@
             <Setter Property="BoxShadow" Value="0 0 4 0 #66C9CED6, 0 0 14 0 #33C9CED6, 0 0 28 0 #15C9CED6"/>
         </Style>
         <Style Selector="Border.rail">
-            <Setter Property="Background" Value="#121316"/>
+            <Setter Property="Background" Value="#262930"/>
             <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="8"/>
         </Style>
         <Style Selector="Border.modal">
-            <Setter Property="Background" Value="#0B0C0E"/>
+            <Setter Property="Background" Value="#1B1D22"/>
             <Setter Property="BorderBrush" Value="#C9CED6"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
@@ -86,7 +86,7 @@
             <Setter Property="Foreground" Value="#7B818C"/>
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#0B0C0E"/>
+            <Setter Property="Background" Value="#1B1D22"/>
             <Setter Property="Foreground" Value="#E6E9EE"/>
             <Setter Property="CaretBrush" Value="#E6E9EE"/>
             <Setter Property="SelectionBrush" Value="#2A2D33"/>
@@ -96,15 +96,12 @@
             <Setter Property="Padding" Value="12"/>
             <Setter Property="FontFamily" Value="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"/>
         </Style>
-        <Style Selector="TextBox.messageText">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="CornerRadius" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
+        <Style Selector="SelectableTextBlock.messageText">
             <Setter Property="Foreground" Value="#D7DAE0"/>
+            <Setter Property="FontFamily" Value="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"/>
         </Style>
         <Style Selector="Button">
-            <Setter Property="Background" Value="#0B0C0E"/>
+            <Setter Property="Background" Value="#1B1D22"/>
             <Setter Property="Foreground" Value="#E6E9EE"/>
             <Setter Property="BorderBrush" Value="#2A2D33"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -114,21 +111,21 @@
             <Setter Property="FontFamily" Value="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"/>
         </Style>
         <Style Selector="Button:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Background" Value="#2E323A"/>
             <Setter Property="TextBlock.Foreground" Value="#C9CED6"/>
         </Style>
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="#C9CED6"/>
-            <Setter Property="Foreground" Value="#0B0C0E"/>
+            <Setter Property="Foreground" Value="#1B1D22"/>
             <Setter Property="BorderBrush" Value="#C9CED6"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="#E6E9EE"/>
-            <Setter Property="TextBlock.Foreground" Value="#0B0C0E"/>
+            <Setter Property="TextBlock.Foreground" Value="#1B1D22"/>
         </Style>
         <Style Selector="Button.ghost">
-            <Setter Property="Background" Value="#0B0C0E"/>
+            <Setter Property="Background" Value="#1B1D22"/>
             <Setter Property="BorderBrush" Value="#2A2D33"/>
         </Style>
         <Style Selector="Button.icon">
@@ -138,6 +135,10 @@
             <Setter Property="Margin" Value="0"/>
             <Setter Property="MinWidth" Value="32"/>
         </Style>
+        <Style Selector="Button.listening /template/ ContentPresenter">
+            <Setter Property="Background" Value="#5A5F69"/>
+        </Style>
+
         <Style Selector="Button.nav">
             <Setter Property="Padding" Value="20,11"/>
             <Setter Property="BorderThickness" Value="2"/>
@@ -159,7 +160,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <Style Selector="Button.dots:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Background" Value="#2E323A"/>
             <Setter Property="TextBlock.Foreground" Value="#C9CED6"/>
         </Style>
         <Style Selector="ListBox">
@@ -183,7 +184,7 @@
             </Setter>
         </Style>
         <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Background" Value="#2E323A"/>
         </Style>
         <Style Selector="ListBox.chatList ListBoxItem:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent"/>
@@ -198,106 +199,113 @@
             <Setter Property="TextDecorations" Value="Strikethrough"/>
         </Style>
 
-        <!-- Calendar: warm light card motif -->
+        <!-- Calendar -->
         <Style Selector="Border.calendarCard">
-            <Setter Property="Background" Value="#121316"/>
-            <Setter Property="BorderBrush" Value="#2A2D33"/>
+            <Setter Property="Background" Value="#2E323A"/>
+            <Setter Property="BorderBrush" Value="#3A3F4A"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="20"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16"/>
         </Style>
         <Style Selector="Border.calendarCard TextBlock">
             <Setter Property="Foreground" Value="#D7DAE0"/>
         </Style>
         <Style Selector="TextBlock.calendarTitle">
-            <Setter Property="Foreground" Value="#E6E9EE"/>
-            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="Foreground" Value="#F0F2F5"/>
+            <Setter Property="FontSize" Value="24"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
         <Style Selector="TextBlock.calendarSubtitle">
-            <Setter Property="Foreground" Value="#7B818C"/>
+            <Setter Property="Foreground" Value="#8F96A1"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
         <Style Selector="Button.calendarNav">
-            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Background" Value="#2E323A"/>
             <Setter Property="Foreground" Value="#C9CED6"/>
-            <Setter Property="BorderBrush" Value="#2A2D33"/>
+            <Setter Property="BorderBrush" Value="#3A3F4A"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="0,0,6,0"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
         <Style Selector="Button.calendarNav:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#23262B"/>
-            <Setter Property="TextBlock.Foreground" Value="#E6E9EE"/>
+            <Setter Property="Background" Value="#3A3F4A"/>
+            <Setter Property="TextBlock.Foreground" Value="#F0F2F5"/>
         </Style>
         <Style Selector="Button.calendarToggle">
-            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#9AA0AA"/>
-            <Setter Property="BorderBrush" Value="#2A2D33"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="12,7"/>
-            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         <Style Selector="Button.calendarToggle:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#23262B"/>
+            <Setter Property="Background" Value="#3A3F4A"/>
         </Style>
         <Style Selector="Button.calendarToggle.active">
-            <Setter Property="Background" Value="#2A2D33"/>
-            <Setter Property="Foreground" Value="#E6E9EE"/>
-            <Setter Property="BorderBrush" Value="#2A2D33"/>
+            <Setter Property="Background" Value="#C9CED6"/>
+            <Setter Property="Foreground" Value="#1B1D22"/>
         </Style>
         <Style Selector="Button.calendarToggle.active:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2A2D33"/>
-            <Setter Property="TextBlock.Foreground" Value="#E6E9EE"/>
+            <Setter Property="Background" Value="#E6E9EE"/>
+            <Setter Property="TextBlock.Foreground" Value="#1B1D22"/>
         </Style>
         <Style Selector="TextBlock.calendarWeekday">
-            <Setter Property="Foreground" Value="#7B818C"/>
+            <Setter Property="Foreground" Value="#8F96A1"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
         </Style>
         <Style Selector="Button.calendarCell">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="3"/>
             <Setter Property="Margin" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="VerticalContentAlignment" Value="Stretch"/>
         </Style>
         <Style Selector="Button.calendarCell:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent"/>
         </Style>
+        <Style Selector="Button.calendarCell:pointerover Border.calendarCell">
+            <Setter Property="Background" Value="#3A3F4A"/>
+        </Style>
         <Style Selector="Border.calendarCell">
-            <Setter Property="Background" Value="#17191D"/>
-            <Setter Property="BorderBrush" Value="#23262B"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="MinHeight" Value="120"/>
+            <Setter Property="Background" Value="#2E323A"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="ClipToBounds" Value="True"/>
         </Style>
         <Style Selector="Border.calendarCell.otherMonth">
-            <Setter Property="Opacity" Value="0.45"/>
+            <Setter Property="Opacity" Value="0.4"/>
         </Style>
         <Style Selector="Border.calendarCell.today">
+            <Setter Property="Background" Value="#363B45"/>
             <Setter Property="BorderBrush" Value="#C9CED6"/>
-            <Setter Property="BorderThickness" Value="2"/>
+        </Style>
+        <Style Selector="Border.calendarCell.today TextBlock.calendarDayNumber">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
         </Style>
         <Style Selector="Border.calendarCell.selected">
-            <Setter Property="Background" Value="#1E2126"/>
+            <Setter Property="Background" Value="#434956"/>
+            <Setter Property="BorderBrush" Value="#8F96A1"/>
         </Style>
         <Style Selector="Border.calendarCell.compact">
-            <Setter Property="MinHeight" Value="92"/>
+            <Setter Property="MinHeight" Value="84"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="Margin" Value="2"/>
         </Style>
         <Style Selector="Border.calendarCell.compact TextBlock.calendarDayNumber">
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
         </Style>
         <Style Selector="Border.calendarCell.compact Border.calendarEventChip">
             <Setter Property="Padding" Value="5,2"/>
@@ -310,64 +318,66 @@
             <Setter Property="FontSize" Value="10"/>
         </Style>
         <Style Selector="TextBlock.calendarDayNumber">
-            <Setter Property="Foreground" Value="#D7DAE0"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Foreground" Value="#AEB4BE"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
         </Style>
         <Style Selector="Border.calendarEventChip">
-            <Setter Property="Background" Value="#23262B"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="7,3"/>
+            <Setter Property="Background" Value="#434956"/>
+            <Setter Property="BorderBrush" Value="#C9CED6"/>
+            <Setter Property="BorderThickness" Value="2,0,0,0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
             <Setter Property="Margin" Value="0,3,0,0"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
         <Style Selector="Border.calendarEventChip TextBlock">
-            <Setter Property="Foreground" Value="#C9CED6"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#E6E9EE"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         </Style>
         <Style Selector="TextBlock.calendarOverflow">
-            <Setter Property="Foreground" Value="#7B818C"/>
+            <Setter Property="Foreground" Value="#8F96A1"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="Margin" Value="2,3,0,0"/>
         </Style>
         <Style Selector="Border.calendarCard Border.message">
-            <Setter Property="Background" Value="#17191D"/>
-            <Setter Property="BorderBrush" Value="#23262B"/>
+            <Setter Property="Background" Value="#383C46"/>
+            <Setter Property="BorderBrush" Value="#434956"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="12"/>
         </Style>
         <Style Selector="Border.calendarCard TextBox">
-            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Background" Value="#383C46"/>
             <Setter Property="Foreground" Value="#D7DAE0"/>
             <Setter Property="CaretBrush" Value="#D7DAE0"/>
-            <Setter Property="SelectionBrush" Value="#3A3E46"/>
-            <Setter Property="BorderBrush" Value="#2A2D33"/>
+            <Setter Property="SelectionBrush" Value="#4A505C"/>
+            <Setter Property="BorderBrush" Value="#434956"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="10"/>
         </Style>
         <Style Selector="Border.calendarCard DatePicker, Border.calendarCard TimePicker">
-            <Setter Property="Background" Value="#17191D"/>
+            <Setter Property="Background" Value="#383C46"/>
             <Setter Property="Foreground" Value="#D7DAE0"/>
-            <Setter Property="BorderBrush" Value="#2A2D33"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="BorderBrush" Value="#434956"/>
+            <Setter Property="CornerRadius" Value="8"/>
         </Style>
         <Style Selector="Border.calendarCard Button.primary">
-            <Setter Property="Background" Value="#2A2D33"/>
-            <Setter Property="Foreground" Value="#E6E9EE"/>
-            <Setter Property="BorderBrush" Value="#2A2D33"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Background" Value="#C9CED6"/>
+            <Setter Property="Foreground" Value="#1B1D22"/>
+            <Setter Property="BorderBrush" Value="#C9CED6"/>
+            <Setter Property="CornerRadius" Value="8"/>
         </Style>
         <Style Selector="Border.calendarCard Button.primary:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#3A3E46"/>
-            <Setter Property="TextBlock.Foreground" Value="#E6E9EE"/>
+            <Setter Property="Background" Value="#E6E9EE"/>
+            <Setter Property="TextBlock.Foreground" Value="#1B1D22"/>
         </Style>
     </Window.Styles>
 
-    <Grid Background="#0B0C0E">
+    <Grid Background="#1B1D22">
         <!-- Main layout: Title bar + hairline + content -->
         <Grid RowDefinitions="Auto,Auto,*">
 
@@ -386,6 +396,7 @@
                             <MenuItem Header="Memory" Command="{Binding ShowMemoryCommand}"/>
                             <MenuItem Header="Calendar" Command="{Binding ShowCalendarCommand}"/>
                             <MenuItem Header="Tasks" Command="{Binding ShowTasksCommand}"/>
+                            <MenuItem Header="{Binding ReviewMenuHeader}" Command="{Binding ShowReviewCommand}"/>
                             <MenuItem Header="-"/>
                             <MenuItem Header="Settings" Command="{Binding OpenSettingsCommand}"/>
                         </MenuFlyout>
@@ -433,9 +444,9 @@
             </Border>
 
             <!-- ═══ MAIN CONTENT AREA ═══ -->
-            <Grid Grid.Row="2" Margin="16,12,16,16">
-                <!-- Content panel (always full width) -->
-                <Border Classes="panel">
+            <Grid Grid.Row="2" Margin="16,12,16,16" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                <!-- Content panel (shares the row with the sidebar; sidebar pushes it right) -->
+                <Border Grid.Column="1" Classes="panel">
                     <Grid>
                         <!-- ═══ CHAT VIEW ═══ -->
                         <Grid IsVisible="{Binding IsChatView}" RowDefinitions="Auto,*,Auto">
@@ -489,13 +500,9 @@
                                                             </Button.Flyout>
                                                         </Button>
                                                     </Grid>
-                                                    <TextBox Classes="messageText"
-                                                             Text="{Binding Content}"
-                                                             IsReadOnly="True"
-                                                             AcceptsReturn="True"
-                                                             TextWrapping="Wrap"
-                                                             MaxHeight="520"
-                                                             ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                                                    <SelectableTextBlock Classes="messageText"
+                                                                         Text="{Binding Content}"
+                                                                         TextWrapping="Wrap"/>
                                                     <Border Classes="calendarCard" Margin="0,10,0,0" IsVisible="{Binding HasCalendarWidget}">
                                                         <StackPanel>
                                                             <Grid ColumnDefinitions="*,Auto">
@@ -547,14 +554,6 @@
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
                                 </ListBox>
-
-                                <Button Content="[ JUMP TO LATEST ]"
-                                        Classes="primary"
-                                        IsVisible="{Binding ShowJumpToLatest}"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Bottom"
-                                        Margin="0,0,0,12"
-                                        Click="JumpToLatestButton_OnClick"/>
                             </Grid>
 
                             <!-- Input area with inline send button -->
@@ -566,7 +565,7 @@
                                              TextWrapping="Wrap"
                                              MinHeight="86"
                                              Watermark="message clio..."
-                                             Padding="12,12,48,12"/>
+                                             Padding="12,12,120,12"/>
                                     <Button Content="↵"
                                             Background="Transparent"
                                             Foreground="#C9CED6"
@@ -583,6 +582,38 @@
                                             VerticalAlignment="Bottom"
                                             Command="{Binding SendChatCommand}"
                                             ToolTip.Tip="Send (Enter)"/>
+                                    <TextBlock Text="{Binding VoiceStatus}" IsVisible="{Binding VoiceStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                               Classes="muted" FontSize="11" TextWrapping="Wrap" MaxWidth="360"
+                                               HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,6"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,40,6" Spacing="2">
+                                        <Button Content="■"
+                                                IsVisible="{Binding IsSpeaking}"
+                                                Background="Transparent"
+                                                Foreground="#C9CED6"
+                                                FontSize="14"
+                                                BorderThickness="0"
+                                                CornerRadius="6"
+                                                Width="32" Height="28"
+                                                Padding="0"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                Command="{Binding StopSpeakingCommand}"
+                                                ToolTip.Tip="Stop speaking"/>
+                                        <Button Content="{Binding MicGlyph}"
+                                                x:Name="MicButton"
+                                                Classes.listening="{Binding IsListening}"
+                                                Background="Transparent"
+                                                Foreground="#C9CED6"
+                                                FontSize="16"
+                                                BorderThickness="0"
+                                                CornerRadius="6"
+                                                MinWidth="32" Height="28"
+                                                Padding="6,0"
+                                                HorizontalContentAlignment="Center"
+                                                VerticalContentAlignment="Center"
+                                                Command="{Binding ToggleMicCommand}"
+                                                ToolTip.Tip="Dictate (click to start/stop)"/>
+                                    </StackPanel>
                                 </Grid>
                             </Border>
                         </Grid>
@@ -641,20 +672,17 @@
                         </Grid>
 
                         <!-- ═══ CALENDAR VIEW ═══ -->
-                        <Grid IsVisible="{Binding IsCalendarView}" RowDefinitions="Auto,*,210,140">
-                            <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                        <Grid IsVisible="{Binding IsCalendarView}" RowDefinitions="Auto,*">
+                            <StackPanel Grid.Row="0" Margin="0,0,0,14">
                                 <TextBlock Classes="eyebrow" Text="// CALENDAR"/>
                                 <TextBlock Text="Calendar" Classes="title"/>
-                                <TextBlock Text="Deadlines, commitments, schedule pressure, and dated entries." Classes="muted"/>
                             </StackPanel>
 
-                            <Border Grid.Row="1" Classes="calendarCard">
-                                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="14">
+                            <Grid Grid.Row="1">
+                                <!-- Month / week grid -->
+                                <Grid Grid.Column="0" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="10">
                                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                                        <StackPanel Grid.Column="0">
-                                            <TextBlock Text="{Binding CalendarHeaderLabel}" Classes="calendarTitle"/>
-                                            <TextBlock Text="{Binding SelectedCalendarDateLabel}" Classes="calendarSubtitle"/>
-                                        </StackPanel>
+                                        <TextBlock Grid.Column="0" Text="{Binding CalendarHeaderLabel}" Classes="calendarTitle" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                             <Button Content="Week" Classes="calendarToggle" Classes.active="{Binding IsCalendarWeekView}" Command="{Binding SetCalendarViewModeCommand}" CommandParameter="Week"/>
                                             <Button Content="2 Weeks" Classes="calendarToggle" Classes.active="{Binding IsCalendarTwoWeekView}" Command="{Binding SetCalendarViewModeCommand}" CommandParameter="TwoWeek"/>
@@ -666,19 +694,19 @@
                                     </Grid>
 
                                     <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*,*,*">
-                                        <TextBlock Grid.Column="0" Text="Sun" Classes="calendarWeekday"/>
-                                        <TextBlock Grid.Column="1" Text="Mon" Classes="calendarWeekday"/>
-                                        <TextBlock Grid.Column="2" Text="Tue" Classes="calendarWeekday"/>
-                                        <TextBlock Grid.Column="3" Text="Wed" Classes="calendarWeekday"/>
-                                        <TextBlock Grid.Column="4" Text="Thu" Classes="calendarWeekday"/>
-                                        <TextBlock Grid.Column="5" Text="Fri" Classes="calendarWeekday"/>
-                                        <TextBlock Grid.Column="6" Text="Sat" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="0" Text="SUN" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="1" Text="MON" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="2" Text="TUE" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="3" Text="WED" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="4" Text="THU" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="5" Text="FRI" Classes="calendarWeekday"/>
+                                        <TextBlock Grid.Column="6" Text="SAT" Classes="calendarWeekday"/>
                                     </Grid>
 
                                     <ItemsControl Grid.Row="2" ItemsSource="{Binding CalendarDays}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <UniformGrid Columns="7" Rows="{Binding CalendarGridRows}"/>
+                                                <UniformGrid Columns="7" Rows="6"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
@@ -708,47 +736,51 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
+
+                                    <Expander Grid.Row="3" Header="Scratchpad" Foreground="#AEB4BE">
+                                        <TextBox Margin="0,8,0,0" Text="{Binding Scratchpad}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" Watermark="temporary context for clio..."/>
+                                    </Expander>
                                 </Grid>
-                            </Border>
 
-                            <Grid Grid.Row="2" ColumnDefinitions="2*,*" ColumnSpacing="16" Margin="0,16,0,0">
-                                <Border Grid.Column="0" Classes="calendarCard">
-                                    <Grid RowDefinitions="Auto,*" RowSpacing="8">
-                                        <TextBlock Grid.Row="0" Text="{Binding SelectedCalendarDateLabel}" Classes="calendarTitle" FontSize="15"/>
-                                        <ListBox Grid.Row="1" ItemsSource="{Binding SelectedDayEvents}">
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate DataType="models:CalendarEvent">
-                                                    <Border Classes="message" Margin="0,0,0,8">
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding DisplayStartsAt}" Foreground="#C9CED6" FontWeight="Bold"/>
-                                                            <TextBlock Text="{Binding Title}" FontWeight="Bold" TextWrapping="Wrap"/>
-                                                            <TextBlock Text="{Binding Details}" Foreground="#7B818C" TextWrapping="Wrap"/>
+                            </Grid>
+                        </Grid>
+
+                        <!-- ═══ REVIEW VIEW ═══ -->
+                        <Grid IsVisible="{Binding IsReviewView}" RowDefinitions="Auto,*">
+                            <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                                <TextBlock Classes="eyebrow" Text="// REVIEW"/>
+                                <TextBlock Text="Review" Classes="title"/>
+                                <TextBlock Text="Things CLIo picked up from chat that disagree with what you set by hand. Your edits stay exactly as they are until you decide."
+                                           Classes="muted" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Nothing to review." Classes="muted" IsVisible="{Binding HasNoReviewItems}"/>
+                                    <ItemsControl ItemsSource="{Binding ReviewItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="models:ReviewItem">
+                                                <Border Classes="calendarCard" Margin="0,0,0,10" Padding="14">
+                                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                                        <StackPanel Grid.Column="0" Spacing="2">
+                                                            <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                                                            <TextBlock Text="{Binding Evidence}" Classes="calendarSubtitle"/>
                                                         </StackPanel>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                    </Grid>
-                                </Border>
-
-                                <Border Grid.Column="1" Classes="calendarCard">
-                                    <StackPanel Spacing="8">
-                                        <TextBlock Text="Add event" Classes="calendarTitle" FontSize="15" Margin="0,0,0,4"/>
-                                        <TextBox Watermark="Event title" Text="{Binding EventTitle}"/>
-                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                                            <DatePicker Grid.Column="0" SelectedDate="{Binding EventDate}"/>
-                                            <TimePicker Grid.Column="1" SelectedTime="{Binding EventTime}"/>
-                                        </Grid>
-                                        <TextBox Watermark="Details" Text="{Binding EventDetails}" AcceptsReturn="True" TextWrapping="Wrap" Height="60"/>
-                                        <Button Content="[ ADD TO CALENDAR ]" Classes="primary" Command="{Binding AddEventCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                            </Grid>
-
-                            <Grid Grid.Row="3" RowDefinitions="Auto,*" Margin="0,16,0,0">
-                                <TextBlock Grid.Row="0" Classes="label" Text="Scratchpad"/>
-                                <TextBox Grid.Row="1" Text="{Binding Scratchpad}" AcceptsReturn="True" TextWrapping="Wrap" Watermark="temporary context for clio..."/>
-                            </Grid>
+                                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                            <Button Content="KEEP MINE" Classes="ghost"
+                                                                    Command="{Binding $parent[Window].DataContext.DismissReviewCommand}"
+                                                                    CommandParameter="{Binding}"/>
+                                                            <Button Content="USE CHAT'S" Classes="primary"
+                                                                    Command="{Binding $parent[Window].DataContext.AcceptReviewCommand}"
+                                                                    CommandParameter="{Binding}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
                         </Grid>
 
                         <!-- ═══ TASKS VIEW ═══ -->
@@ -793,16 +825,14 @@
                     </Grid>
                 </Border>
 
-                <!-- ═══ OVERLAY DRAWER (left sidebar) ═══ -->
-                <Border Background="#121316"
+                <!-- ═══ LEFT SIDEBAR (docked; pushes the content panel aside) ═══ -->
+                <Border Grid.Column="0"
+                        Background="#262930"
                         Width="300"
-                        HorizontalAlignment="Left"
                         VerticalAlignment="Stretch"
-                        CornerRadius="0,16,16,0"
-                        BoxShadow="4 0 16 0 #40000000"
+                        CornerRadius="16"
                         Padding="16"
-                        IsVisible="{Binding IsThreadsPanelOpen}"
-                        ZIndex="10">
+                        IsVisible="{Binding IsThreadsPanelOpen}">
                     <Grid RowDefinitions="Auto,*">
                         <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,14">
                             <StackPanel Grid.Column="0">
@@ -879,8 +909,65 @@
             </Grid>
         </Grid>
 
+        <!-- ═══ DAY MODAL ═══ -->
+        <Border IsVisible="{Binding IsDayModalOpen}" Background="#CC1B1D22">
+            <Border Classes="modal" Width="560" MaxHeight="680" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="14">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Classes="eyebrow" Text="// DAY"/>
+                            <TextBlock Text="{Binding SelectedCalendarDateLabel}" Classes="title"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="&#215;" Classes="icon" FontSize="18" VerticalAlignment="Top"
+                                Command="{Binding CloseDayModalCommand}" ToolTip.Tip="Close"/>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Nothing scheduled for this day." Classes="muted" IsVisible="{Binding HasNoDayEvents}"/>
+                            <ItemsControl ItemsSource="{Binding DayEditors}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="models:CalendarEventEditor">
+                                        <Border Classes="calendarCard" Margin="0,0,0,10" Padding="12">
+                                            <StackPanel Spacing="8">
+                                                <TextBox Text="{Binding Title}" Watermark="Title"/>
+                                                <TimePicker SelectedTime="{Binding Time}"/>
+                                                <TextBox Text="{Binding Details}" Watermark="Details" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="56"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                                    <Button Content="DELETE" Classes="ghost"
+                                                            Command="{Binding $parent[Window].DataContext.DeleteEventEditorCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Content="SAVE" Classes="primary"
+                                                            Command="{Binding $parent[Window].DataContext.SaveEventEditorCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Classes="calendarCard" Padding="12">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Add to this day" Classes="calendarSubtitle"/>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Grid.Column="0" Watermark="Event title" Text="{Binding EventTitle}"/>
+                                <TimePicker Grid.Column="1" SelectedTime="{Binding EventTime}"/>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBox Grid.Column="0" Watermark="Details (optional)" Text="{Binding EventDetails}"/>
+                                <Button Grid.Column="1" Content="ADD" Classes="primary" Command="{Binding AddEventCommand}"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+
         <!-- ═══ SCHEDULE TASK MODAL ═══ -->
-        <Border IsVisible="{Binding IsScheduleTaskModalOpen}" Background="#CC0B0C0E">
+        <Border IsVisible="{Binding IsScheduleTaskModalOpen}" Background="#CC1B1D22">
             <Border Classes="modal" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="18">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -910,7 +997,7 @@
         </Border>
 
         <!-- ═══ CHAT RENAME MODAL ═══ -->
-        <Border IsVisible="{Binding IsChatRenameOpen}" Background="#CC0B0C0E">
+        <Border IsVisible="{Binding IsChatRenameOpen}" Background="#CC1B1D22">
             <Border Classes="modal" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="18">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -932,9 +1019,9 @@
         </Border>
 
         <!-- ═══ SETTINGS MODAL ═══ -->
-        <Border IsVisible="{Binding IsSettingsOpen}" Background="#CC0B0C0E">
+        <Border IsVisible="{Binding IsSettingsOpen}" Background="#CC1B1D22">
             <Border Classes="modal" Width="560" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="18">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="18">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0">
                             <TextBlock Classes="eyebrow" Text="// SETTINGS"/>
@@ -945,13 +1032,64 @@
 
                     <StackPanel Grid.Row="1">
                         <TextBlock Classes="label" Text="DeepSeek API key"/>
-                        <TextBox Text="{Binding DeepSeekApiKey}" PasswordChar="*" Watermark="sk-..."/>
+                        <TextBox Classes="revealPasswordButton" Text="{Binding DeepSeekApiKey}" PasswordChar="*" Watermark="sk-..."/>
                         <TextBlock Text="Stored locally in CLIo settings and loaded when the app starts." Classes="muted" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="2" Text="{Binding SettingsStatus}" Foreground="#C9CED6" TextWrapping="Wrap"/>
+                    <StackPanel Grid.Row="2" Spacing="8">
+                        <TextBlock Classes="label" Text="Voice"/>
+                        <CheckBox Content="Speak CLIo's replies aloud" IsChecked="{Binding SpeakReplies}"/>
+                        <CheckBox Content="Send dictation automatically when I stop the mic" IsChecked="{Binding AutoSendVoice}"/>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <TextBlock Grid.Column="0" Text="Voice speed" Classes="muted" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" Minimum="0.6" Maximum="1.6" Value="{Binding VoiceSpeed}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding VoiceSpeed, StringFormat='{}{0:0.00}x'}" Classes="muted" VerticalAlignment="Center"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <TextBlock Grid.Column="0" Text="Expressiveness" Classes="muted" VerticalAlignment="Center" Width="100"/>
+                            <Slider Grid.Column="1" Minimum="0" Maximum="1.2" Value="{Binding VoiceExpressiveness}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding VoiceExpressiveness, StringFormat='{}{0:0.00}'}" Classes="muted" VerticalAlignment="Center"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <TextBlock Grid.Column="0" Text="Cadence" Classes="muted" VerticalAlignment="Center" Width="100"/>
+                            <Slider Grid.Column="1" Minimum="0" Maximum="1.2" Value="{Binding VoiceCadence}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding VoiceCadence, StringFormat='{}{0:0.00}'}" Classes="muted" VerticalAlignment="Center"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <TextBlock Grid.Column="0" Text="Sentence pause" Classes="muted" VerticalAlignment="Center" Width="100"/>
+                            <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding VoicePause}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding VoicePause, StringFormat='{}{0:0.00}s'}" Classes="muted" VerticalAlignment="Center"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="[ PREVIEW ]" Classes="ghost" Command="{Binding PreviewVoiceCommand}"/>
+                            <Button Content="[ RESET ]" Classes="ghost" Command="{Binding ResetVoiceTuningCommand}"/>
+                        </StackPanel>
+                        <TextBlock Classes="label" Text="Voice models" Margin="0,4,0,0"/>
+                        <TextBlock Text="{Binding VoiceModelsStatus}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                        <TextBlock Text="Better dictation and a natural voice run fully on this PC. One-time download, about 285 MB, from Hugging Face and GitHub." Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding CanDownloadVoiceModels}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="[ DOWNLOAD VOICE MODELS ]" Classes="primary" Command="{Binding DownloadVoiceModelsCommand}" IsVisible="{Binding CanDownloadVoiceModels}"/>
+                            <Button Content="[ CANCEL DOWNLOAD ]" Classes="ghost" Command="{Binding CancelVoiceDownloadCommand}" IsVisible="{Binding IsDownloadingVoice}"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding VoiceDownloadProgress}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                        <CheckBox Content="Polish dictation with DeepSeek (fixes names and punctuation)" IsChecked="{Binding PolishDictation}"/>
+                        <CheckBox Content="Local only: never send my voice to a server" IsChecked="{Binding LocalSpeechOnly}"/>
+                        <TextBlock Classes="label" Text="Whisper server (optional)" Margin="0,8,0,0"/>
+                        <TextBox Text="{Binding SttServerUrl}" Watermark="https://clio-stt.your-name.workers.dev  (blank = local only)"/>
+                        <TextBox Text="{Binding SttServerModel}" Watermark="model name (only for your own Whisper server)"/>
+                        <TextBox Classes="revealPasswordButton" Text="{Binding SttServerKey}" PasswordChar="*" Watermark="API key (only for your own Whisper server)"/>
+                        <TextBlock Text="Paste the URL of your CLIo speech Worker (see worker/README.md). Self-hosted OpenAI-compatible servers work too. Falls back to local Whisper if unreachable." Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                        <TextBlock Classes="label" Text="Voice corrections" Margin="0,8,0,0"/>
+                        <TextBox Text="{Binding VoiceCorrectionsText}" AcceptsReturn="True" TextWrapping="NoWrap" Height="84"
+                                 Watermark="heard => correct, one per line&#10;dock lite => Docklite"/>
+                        <TextBlock Text="Words speech recognition keeps getting wrong. CLIo also auto-fixes near-misses of names it knows (people, projects, tools) and logs each fix in __dev." Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                        <TextBlock Text="Uses the local Windows speech engines. Nothing leaves your machine." Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding VoiceStatus}" Classes="muted" FontSize="12" TextWrapping="Wrap"/>
+                    </StackPanel>
 
-                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock Grid.Row="3" Text="{Binding SettingsStatus}" Foreground="#C9CED6" TextWrapping="Wrap"/>
+
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Content="[ CANCEL ]" Classes="ghost" Command="{Binding CloseSettingsCommand}"/>
                         <Button Content="[ SAVE SETTINGS ]" Classes="primary" Command="{Binding SaveSettingsCommand}"/>
                     </StackPanel>

@@ -13,7 +13,7 @@ public sealed class TaskService : ITaskService
 
     public Task<IReadOnlyList<JournalTask>> GetAllAsync() => database.GetTasksAsync();
 
-    public Task AddAsync(string title) => database.AddTaskAsync(title);
+    public Task AddAsync(string title, string source = "chat") => database.AddTaskAsync(title, source);
 
     public Task DeleteAsync(int id) => database.DeleteTaskAsync(id);
 

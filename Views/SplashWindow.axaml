@@ -14,7 +14,7 @@
         FontFamily="Cascadia Code,Cascadia Mono,Consolas,DejaVu Sans Mono,Menlo,monospace"
         Title="CLIo">
 
-    <Border Background="#0B0C0E" BorderBrush="#C9CED6" BorderThickness="1" CornerRadius="6">
+    <Border Background="#1B1D22" BorderBrush="#C9CED6" BorderThickness="1" CornerRadius="6">
         <Grid RowDefinitions="*,1">
             <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="14">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

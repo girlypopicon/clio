@@ -7,3 +7,8 @@ dist/
 *.user
 *.suo
 .vs/
+
+# Cloudflare Worker tooling
+node_modules/
+.wrangler/
+.dev.vars

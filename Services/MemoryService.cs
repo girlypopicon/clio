@@ -27,7 +27,7 @@ public class MemoryService : IMemoryService
 
     public Task<IReadOnlyList<MemoryTransaction>> GetTransactionsAsync(int limit = 80) => _database.GetMemoryTransactionsAsync(limit);
 
-    public Task UpsertAsync(string key, string value, string type) => _database.UpsertMemoryAsync(key, value, type);
+    public Task UpsertAsync(string key, string value, string type, string source = "chat") => _database.UpsertMemoryAsync(key, value, type, source);
 
     public Task DeleteAsync(string key) => _database.DeleteMemoryAsync(key);
 

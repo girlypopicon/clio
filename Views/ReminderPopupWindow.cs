@@ -34,8 +34,8 @@ public sealed class ReminderPopupWindow : Window
             {
                 Content = text,
                 Padding = new Thickness(12, 5),
-                Background = primary ? accent : new SolidColorBrush(Color.Parse("#17191D")),
-                Foreground = primary ? new SolidColorBrush(Color.Parse("#0B0C0E")) : Brushes.White,
+                Background = primary ? accent : new SolidColorBrush(Color.Parse("#2E323A")),
+                Foreground = primary ? new SolidColorBrush(Color.Parse("#1B1D22")) : Brushes.White,
                 BorderBrush = new SolidColorBrush(Color.Parse("#2A2D33"))
             };
         }
@@ -49,7 +49,7 @@ public sealed class ReminderPopupWindow : Window
 
         Content = new Border
         {
-            Background = new SolidColorBrush(Color.Parse("#0B0C0E")),
+            Background = new SolidColorBrush(Color.Parse("#1B1D22")),
             BorderBrush = accent,
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(6),

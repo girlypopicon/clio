@@ -62,7 +62,7 @@ public partial class MainWindow : Window
         }
 
         // DWM caption/text/border colors are 0x00BBGGRR.
-        var captionColor = 0x000E0C0Bu; // #0B0C0E in BGR
+        var captionColor = 0x00221D1Bu; // #1B1D22 in BGR
         var textColor = 0x00D6CEC9u;    // #C9CED6 in BGR
         var borderColor = 0x00332D2Au;  // #2A2D33 in BGR
 
@@ -131,15 +131,6 @@ public partial class MainWindow : Window
 
         var distanceFromBottom = scrollViewer.Extent.Height - (scrollViewer.Offset.Y + scrollViewer.Viewport.Height);
         isAtBottom = distanceFromBottom <= BottomThreshold;
-        if (viewModel is not null)
-        {
-            viewModel.ShowJumpToLatest = !isAtBottom;
-        }
-    }
-
-    private void JumpToLatestButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        ScrollChatToBottom(force: true);
     }
 
     private async void MainWindow_OnKeyDown(object? sender, KeyEventArgs e)
@@ -414,7 +405,9 @@ public partial class MainWindow : Window
             }
         }
 
-        ScrollChatToBottom();
+        // A brand-new message always jumps to the bottom, wherever the user had scrolled to.
+        // (Streaming updates to an existing message only follow if the user is already at the bottom.)
+        ScrollChatToBottom(force: e.Action == NotifyCollectionChangedAction.Add);
     }
 
     private void OnMessagePropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -451,10 +444,6 @@ public partial class MainWindow : Window
             }
 
             isAtBottom = true;
-            if (viewModel is not null)
-            {
-                viewModel.ShowJumpToLatest = false;
-            }
         }, DispatcherPriority.Background);
     }
 

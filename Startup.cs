@@ -31,11 +31,25 @@ public static class Startup
 
         services.AddSingleton<WebSearchService>();
 
+        // Skills (see Services/Skills/ISkill.cs) and persona agents
+        services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.WebSearchSkill>();
+        services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.BrowseSkill>();
+        services.AddSingleton<CLIo.Services.Skills.ISkill, CLIo.Services.Skills.SelfDocsSkill>();
+        services.AddSingleton<CLIo.Services.Skills.SkillRegistry>();
+        services.AddSingleton<CLIo.Services.Skills.AgentCatalog>();
+
         // Domain services
         services.AddSingleton<IMemoryService, MemoryService>();
         services.AddSingleton<ICalendarService, CalendarService>();
         services.AddSingleton<ITaskService, TaskService>();
         services.AddSingleton<ReminderService>();
+
+        // Voice: Whisper/Piper when models are in %LOCALAPPDATA%/CLIo/voice, else Windows engines
+        services.AddSingleton<VoiceModelDownloader>();
+        services.AddSingleton<SystemSpeechToTextService>();
+        services.AddSingleton<ISpeechToTextService, WhisperSpeechToTextService>();
+        services.AddSingleton<SystemTextToSpeechService>();
+        services.AddSingleton<ITextToSpeechService, PiperTextToSpeechService>();
 
         // BotSharp agent routing
         services.AddSingleton<ClioRouter>();
