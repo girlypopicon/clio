@@ -379,7 +379,7 @@
 
     <Grid Background="#1B1D22">
         <!-- Main layout: Title bar + hairline + content -->
-        <Grid RowDefinitions="Auto,Auto,*">
+        <Grid RowDefinitions="Auto,Auto,Auto,*">
 
             <!-- ═══ TITLE BAR (acts as window drag area) ═══ -->
             <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto" Height="48" Margin="8,0,8,0"
@@ -444,7 +444,17 @@
             </Border>
 
             <!-- ═══ MAIN CONTENT AREA ═══ -->
-            <Grid Grid.Row="2" Margin="16,12,16,16" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <!-- ═══ UPDATE BANNER (only appears when a newer release exists) ═══ -->
+            <Border Grid.Row="2" IsVisible="{Binding IsUpdateBannerVisible}" Margin="16,10,16,0" Padding="14,8"
+                    Background="#2E323A" BorderBrush="#434956" BorderThickness="1" CornerRadius="10">
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                    <TextBlock Grid.Column="0" Text="{Binding UpdateBannerText}" VerticalAlignment="Center" Foreground="#E6E9EE"/>
+                    <Button Grid.Column="1" Content="VIEW RELEASE" Classes="primary" Command="{Binding OpenUpdatePageCommand}"/>
+                    <Button Grid.Column="2" Content="LATER" Classes="ghost" Command="{Binding DismissUpdateCommand}"/>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="3" Margin="16,12,16,16" ColumnDefinitions="Auto,*" ColumnSpacing="12">
                 <!-- Content panel (shares the row with the sidebar; sidebar pushes it right) -->
                 <Border Grid.Column="1" Classes="panel">
                     <Grid>

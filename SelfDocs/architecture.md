@@ -37,6 +37,9 @@ Skills are abilities CLIo can use. The contract (ISkill): a name, a one-line sum
 ## agents
 Persona agents are Markdown files with a name, a description and instructions. Typing `@Name` at the start of a message makes CLIo answer as that specialist for that one reply. They change how she answers; they give no new abilities. Files live in the agents folder next to the app and in the user's CLIo agents folder, which overrides it. Listed live by self_docs (topic: agents).
 
+## updates
+CLIo has one version number (in the project file); the prompt, self_docs and the update check all read it. About once a day, and whenever the user asks (the check_for_updates skill, or `__update`), she looks at the latest published release in the project's GitHub repository and compares it with her own version. If a newer one exists a quiet banner appears with a link to the release page and a Later button. She only ever looks. She cannot download or install an update herself, and must never say she updated: the user opens the release page and runs the installer with CLIo closed. If no release has been published yet she says so; people who run from source update by pulling the code and rebuilding. Applying updates automatically is deliberately not built: it would need signed or checksummed releases first.
+
 ## security
 The database is encrypted with SQLCipher using a random key that Windows DPAPI protects for this user account; the API key is stored the same way. The browse skill refuses private, loopback, link-local and carrier-NAT addresses on the actual connection, so a web page cannot steer CLIo into the user's own network. Schema upgrades back up the database first (backups folder under the CLIo data folder). There is no telemetry. Data leaves the PC only to: DeepSeek (chat and extraction), the speech Worker (if not local only), web search and pages the browse skill reads.
 

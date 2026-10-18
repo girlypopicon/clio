@@ -52,8 +52,10 @@ public partial class MainWindowViewModel : ViewModelBase
         ITextToSpeechService textToSpeech,
         VoiceModelDownloader voiceDownloader,
         SkillRegistry skillRegistry,
-        AgentCatalog agentCatalog)
+        AgentCatalog agentCatalog,
+        UpdateService updateService)
     {
+        this.updateService = updateService;
         this.skillRegistry = skillRegistry;
         this.agentCatalog = agentCatalog;
         this.voiceDownloader = voiceDownloader;
@@ -156,6 +158,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ITextToSpeechService textToSpeech;
     private readonly SkillRegistry skillRegistry;
     private readonly AgentCatalog agentCatalog;
+    private readonly UpdateService updateService;
     private string? turnAgentPrompt;
 
     [ObservableProperty]
@@ -1012,6 +1015,97 @@ public partial class MainWindowViewModel : ViewModelBase
         await LoadReviewAsync();
     }
 
+    // ---- update notice (looks only; never downloads or installs) -----------------------------
+
+    [ObservableProperty]
+    private bool isUpdateBannerVisible;
+
+    [ObservableProperty]
+    private string updateBannerText = string.Empty;
+
+    private string updateUrl = string.Empty;
+    private string updateTag = string.Empty;
+
+    /// <summary>Checks about once a day while the app is open; a dismissed version stays dismissed.</summary>
+    private async Task RunUpdateLoopAsync()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromHours(6));
+        do
+        {
+            try
+            {
+                var last = DateTimeOffset.TryParse(await database.GetSettingAsync("update_last_check"), out var parsed)
+                    ? parsed
+                    : DateTimeOffset.MinValue;
+                if (DateTimeOffset.Now - last > TimeSpan.FromHours(20))
+                {
+                    var info = await updateService.CheckAsync();
+                    if (info.Ok)
+                    {
+                        await database.SetSettingAsync("update_last_check", DateTimeOffset.Now.ToString("O"));
+                        await database.SetSettingAsync("update_latest_tag", info.IsNewer ? info.Tag : string.Empty);
+                        await database.SetSettingAsync("update_latest_url", info.IsNewer ? info.Url : string.Empty);
+                    }
+                }
+
+                await ShowUpdateBannerFromSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                devLog.Log($"Update check failed: {ex.Message}", "update");
+            }
+        }
+        while (await timer.WaitForNextTickAsync());
+    }
+
+    private async Task ShowUpdateBannerFromSettingsAsync()
+    {
+        var tag = await database.GetSettingAsync("update_latest_tag");
+        var url = await database.GetSettingAsync("update_latest_url");
+        var dismissed = await database.GetSettingAsync("update_dismissed_tag");
+
+        // A newer release than the one we are running, that the user has not dismissed.
+        var isNewer = tag.Length > 0
+            && Version.TryParse(tag.TrimStart('v', 'V'), out var latest)
+            && AppVersion.Normalize(latest) > AppVersion.Parsed;
+        if (isNewer && tag != dismissed && UpdateService.IsRepoUrl(url))
+        {
+            updateTag = tag;
+            updateUrl = url;
+            UpdateBannerText = $"CLIo {tag.TrimStart('v', 'V')} is available. You're on {AppVersion.Text}.";
+            IsUpdateBannerVisible = true;
+        }
+        else
+        {
+            IsUpdateBannerVisible = false;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenUpdatePage()
+    {
+        if (!UpdateService.IsRepoUrl(updateUrl))
+        {
+            return;
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(updateUrl) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            devLog.Log($"Could not open the release page: {ex.Message}", "update");
+        }
+    }
+
+    [RelayCommand]
+    private async Task DismissUpdateAsync()
+    {
+        await database.SetSettingAsync("update_dismissed_tag", updateTag);
+        IsUpdateBannerVisible = false;
+    }
+
     [RelayCommand]
     private void ShowTasks()
     {
@@ -1787,6 +1881,15 @@ public partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (normalized is "update" or "updates" or "version")
+        {
+            var info = await updateService.CheckAsync(force: true);
+            var listing = new ChatMessage { Role = "assistant", Content = UpdateService.Describe(info), Timestamp = DateTimeOffset.Now };
+            ChatMessages.Add(listing);
+            await database.AddChatMessageAsync(SelectedThreadId, listing.Role, listing.Content, listing.Timestamp);
+            return;
+        }
+
         if (normalized is "skills" or "agents")
         {
             var sb = new StringBuilder();
@@ -2319,6 +2422,7 @@ public partial class MainWindowViewModel : ViewModelBase
         await MaybeTrimChatHistoryAsync();
         await clioState.RecordStartupAsync(SystemPromptBuilder.Version);
         devLog.Log($"CLIo v{SystemPromptBuilder.Version} started, session #{await clioState.GetAsync("session_count")}", "startup");
+        _ = RunUpdateLoopAsync();
     }
 
     private const int MaxMessagesPerThread = 400;

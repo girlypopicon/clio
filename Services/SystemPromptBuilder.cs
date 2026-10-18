@@ -73,7 +73,7 @@ public sealed class SystemPromptBuilder
         }
     }
 
-    public const string Version = "0.4.0";
+    public static string Version => AppVersion.Text;
     public const string ReleaseDate = "2026-10-18";
 
     private static readonly PatchEntry[] PatchNotes =
