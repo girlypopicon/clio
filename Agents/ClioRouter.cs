@@ -86,8 +86,8 @@ public sealed class ClioRouter
     /// </summary>
     public static string? FocusFor(string agentId) => agentId switch
     {
-        ClioAgentIds.Memory => "Turn focus: this message is about remembering or recalling information. Prefer the structured memory block over prose, and ask before treating a guess as a fact.",
-        ClioAgentIds.Calendar => "Turn focus: this message is about time. Resolve relative dates against the current local time, give an ISO 8601 datetime with offset, and ask if the day or time is ambiguous.",
+        ClioAgentIds.Memory => "Turn focus: this message is about remembering or recalling information. Answer in plain prose, and ask before treating a guess as a fact.",
+        ClioAgentIds.Calendar => "Turn focus: this message is about time. Resolve relative dates against the current local time, state the day and time plainly, and ask if the day or time is ambiguous.",
         ClioAgentIds.Task => "Turn focus: this message is about something to do. Keep the task title short and actionable; do not invent a due date.",
         _ => null
     };

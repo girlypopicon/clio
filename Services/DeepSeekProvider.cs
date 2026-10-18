@@ -29,6 +29,8 @@ public sealed class DeepSeekProvider : ILLMProvider
         {
             model = Environment.GetEnvironmentVariable("DEEPSEEK_MODEL") ?? "deepseek-chat",
             stream = true,
+            // DeepSeek's default cap is 4096 tokens and it ends the reply mid-sentence without error.
+            max_tokens = MaxTokens(),
             stream_options = new { include_usage = true },
             messages = messages.Select(message => new
             {
@@ -65,6 +67,11 @@ public sealed class DeepSeekProvider : ILLMProvider
 
             ReadUsage(data);
 
+            if (HitLengthLimit(data))
+            {
+                yield return "\n\n[This reply hit the length limit and was cut off. Say \"continue\" to pick up where it stopped.]";
+            }
+
             var token = ReadToken(data);
             if (!string.IsNullOrEmpty(token))
             {
@@ -95,6 +102,27 @@ public sealed class DeepSeekProvider : ILLMProvider
         catch (JsonException)
         {
             // usage is a bonus; never break the stream over it
+        }
+    }
+
+    // 8192 is deepseek-chat's maximum; DEEPSEEK_MAX_TOKENS overrides it for other models.
+    private static int MaxTokens() =>
+        int.TryParse(Environment.GetEnvironmentVariable("DEEPSEEK_MAX_TOKENS"), out var value) && value > 0 ? value : 8192;
+
+    private static bool HitLengthLimit(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            return document.RootElement.TryGetProperty("choices", out var choices)
+                && choices.GetArrayLength() > 0
+                && choices[0].TryGetProperty("finish_reason", out var reason)
+                && reason.ValueKind == JsonValueKind.String
+                && reason.GetString() == "length";
+        }
+        catch (JsonException)
+        {
+            return false;
         }
     }
 

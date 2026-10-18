@@ -95,6 +95,12 @@ public sealed class ResilientLlmProvider : ILLMProvider
                 devLog.Log($"LLM error: {ex.Message}", "llm");
                 engine = "failed";
                 error = ex.Message;
+                if (outputChars > 0 && !cancellationToken.IsCancellationRequested)
+                {
+                    // the stream broke part-way; say so instead of leaving a silently cut-off reply
+                    Emit("\n\n[The connection dropped before this reply finished.]");
+                    await channel.Writer.WriteAsync("\n\n[The connection dropped before this reply finished.]");
+                }
             }
             finally
             {

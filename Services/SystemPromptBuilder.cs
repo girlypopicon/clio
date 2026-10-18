@@ -97,6 +97,11 @@ public sealed class SystemPromptBuilder
 
     private static readonly PatchEntry[] PatchNotes =
     [
+        new("v0.5.1", "2026-10-18",
+        [
+            "Fix: long replies were being cut off mid-sentence. Replies can now run up to 8192 tokens, and if one still hits the limit (or the connection drops) it says so instead of just stopping; say \"continue\" to go on",
+            "Fix: the per-turn routing hints no longer ask for structured blocks, which the app strips from replies",
+        ]),
         new("v0.5.0", "2026-10-18",
         [
             "Recurring events: a calendar event can repeat (daily, weekly on chosen days, every N weeks, monthly, yearly, with an optional end date or count). Make one repeat with __repeat #<id> every tuesday (or weekdays, monthly, off). Repeating events show a ↻ mark, one reminder fires per occurrence, and a change to one applies to the whole series",
